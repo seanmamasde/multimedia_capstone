@@ -1,0 +1,27 @@
+/* Logo styling */
+.logo {
+  margin-right: 20px; /* Space between logo and first menu item */
+}
+
+/* Custom avatar styling */
+.customAvatar {
+  height: 28px !important; /* Avatar height */
+  width: 28px !important; /* Avatar width */
+  font-size: 0.9rem !important; /* Adjust text size */
+  background-color: #dfe2e6 !important; /* Light background */
+  color: #434343 !important; /* Dark text */
+}
+
+/* Highlight the active menu item */
+.activeMenuItem {
+  background-color: #e5e5e5; /* Blue background */
+  color: #ffffff !important; /* White text */
+  font-weight: bold; /* Bold text for emphasis */
+  border-radius: 4px; /* Add rounded corners */
+}
+
+/* Remove hover effects on the active item to maintain prominence */
+.activeMenuItem:hover {
+  background-color: #e5e5e5;
+  color: #ffffff;
+}
