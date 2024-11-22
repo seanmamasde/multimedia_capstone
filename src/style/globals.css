@@ -21,6 +21,17 @@
   align-items: center;
 }
 
+/* Menu item hover effect */
+.p-menu .p-menuitem-link:hover {
+  background-color: #e0e0e0; /* Light hover background */
+}
+
+.p-menu .p-menuitem-link {
+  height: 32px;
+  font-size: 0.9rem;
+}
+
+
 /* DESKTOP MODE */
 @media (min-width: 768px) {
   .p-menubar-root-list > .p-menuitem {

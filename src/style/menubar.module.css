@@ -10,6 +10,16 @@
   font-size: 0.9rem !important; /* Adjust text size */
   background-color: #dfe2e6 !important; /* Light background */
   color: #434343 !important; /* Dark text */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dropdown Menu alignment for mobile and desktop */
+.p-menu {
+  min-width: 150px;
+  z-index: 1000;
 }
 
 /* Highlight the active menu item */
@@ -24,4 +34,11 @@
 .activeMenuItem:hover {
   background-color: #e5e5e5;
   color: #ffffff;
+}
+
+/* Avatar Menu alignment */
+.avatarMenu {
+  width: 180px; /* Adjust menu width */
+  border-radius: 4px; /* Rounded corners for the dropdown */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow */
 }
