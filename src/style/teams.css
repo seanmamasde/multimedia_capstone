@@ -3,7 +3,7 @@
     padding: 10px;
 }
 
-.teams-field > input {
+.teams-create {
     font-size: xx-large;
     font-weight: bold;
     color: #aaa;
@@ -11,6 +11,12 @@
     border: #aaa 1px solid;
     border-radius: 4px;
     width: 100%;
+}
+
+.teams-create:hover {
+    border: #0033a0 1px solid;
+    color: #0033a0;
+    transition: all 0.1s ease;
 }
 
 .teams-container {
@@ -21,3 +27,7 @@
     font-weight: bold;
 }
 
+.teams-container:hover {
+    border: #0033a0 1px solid;
+    transition: all 0.1s ease;
+}

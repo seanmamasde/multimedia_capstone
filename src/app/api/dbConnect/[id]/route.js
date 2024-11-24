@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import dbConnect from "../../../../utils/db.js";
 import Teams from "../../../../models/Teams.js";
+import User from "../../../../models/User.js";
 import promptSync from "prompt-sync";
 
 // Load environment variables
@@ -14,65 +15,21 @@ export async function GET(request, { params }) {
       const queryParams = new URLSearchParams(request.url.split('?')[1]);
 
       switch (id) {
-        case "teamsByUid": {
-          const uid = queryParams.get("uid");
-          console.log(uid);
+        case "teamsByUname": {
+          const uname = queryParams.get("uname");
+          console.log(uname);
 
-          const allTeams = await Teams.aggregate([
-            {
-              $match: {
-                  $or: [
-                      { uid1: uid },
-                      { uid2: uid },
-                      { uid3: uid },
-                      { uid4: uid }
-                    ]
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid1',
-                foreignField: 'id',
-                as: 'u1name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid2',
-                foreignField: 'id',
-                as: 'u2name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid3',
-                foreignField: 'id',
-                as: 'u3name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid4',
-                foreignField: 'id',
-                as: 'u4name'
-              }
-            },
-            {
-              $addFields: {
-                  u1name: { $arrayElemAt: ["$u1name.username", 0] },
-                  u2name: { $arrayElemAt: ["$u2name.username", 0] },
-                  u3name: { $arrayElemAt: ["$u3name.username", 0] },
-                  u4name: { $arrayElemAt: ["$u4name.username", 0] }
-              }
-            }
-          ])
-          .catch(err => {
-            console.error(err);
-          });
+          const allTeams = await Teams.find({
+                            $or: [
+                                { uname1: uname },
+                                { uname2: uname },
+                                { uname3: uname },
+                                { uname4: uname }
+                              ]
+                          })
+                          .catch(err => {
+                            console.error(err);
+                          });
 
           return new Response(JSON.stringify(allTeams), {
               status: 200,
@@ -82,56 +39,10 @@ export async function GET(request, { params }) {
           const tid = queryParams.get("tid");
           console.log(tid);
 
-          const specifiedTeam = await Teams.aggregate([
-            {
-              $match: {
-                id: tid
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid1',
-                foreignField: 'id',
-                as: 'u1name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid2',
-                foreignField: 'id',
-                as: 'u2name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid3',
-                foreignField: 'id',
-                as: 'u3name'
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'uid4',
-                foreignField: 'id',
-                as: 'u4name'
-              }
-            },
-            {
-              $addFields: {
-                  u1name: { $arrayElemAt: ["$u1name.username", 0] },
-                  u2name: { $arrayElemAt: ["$u2name.username", 0] },
-                  u3name: { $arrayElemAt: ["$u3name.username", 0] },
-                  u4name: { $arrayElemAt: ["$u4name.username", 0] }
-              }
-            }
-          ])
-          .catch(err => {
-            console.error(err);
-          });
+          const specifiedTeam = await Teams.find({ id: tid })
+                                      .catch(err => {
+                                        console.error(err);
+                                      });
 
           console.log(specifiedTeam);
 
@@ -140,17 +51,77 @@ export async function GET(request, { params }) {
           });
         }
         default:
-          return new Response('Invalid ID', { status: 404 });
+          return new Response('Invalid GET ID', { status: 404 });
       }
     } catch(error) {
-        return new Response(error, {
-            status: 500,
-        });
+      console.log(error);
+
+      return new Response(error, {
+          status: 500,
+      });
     }
 }   
 
-export async function POST(req) {
-    return new Response("post unsupported", {
-        status: 404,
-      });
+export async function POST(request, { params }) {
+  try {
+    const { id } = await params;
+    await dbConnect();
+    switch (id) {
+      case "createTeam": {
+        const { teamName, numMembers, userNames } = await request.json()
+
+        const team = new Teams({
+          teamname: teamName,
+          memberNum: numMembers,
+          uname1: userNames[0],
+          uname2: userNames[1],
+          uname3: userNames[2],
+          uname4: userNames[3]
+        });
+
+        await team.save();
+        return new Response('Success', { status: 200 })
+      }
+      case "validateUsers": {
+        const { userNames } = await request.json();
+        console.log(userNames);
+        const users = await User.find({ username: { $in: userNames } });
+
+        if (users.length === userNames.length) {
+          return new Response(JSON.stringify({ missingUsers: [] }), { status: 200 }) // All users are present
+        }
+
+        const foundUsernames = users.map(user => user.username);
+        const missingUsers = userNames.filter(username => !foundUsernames.includes(username));
+
+        return new Response(JSON.stringify({ missingUsers: missingUsers }), { status: 200 })
+      }
+      case "editTeam": {
+        // needs encryption
+        const { team } = await request.json();
+        const id = team.id;
+
+        const updated = await Teams.findOneAndUpdate(
+          { id },
+          { ...team },
+          { new: true, upsert: false }
+        );
+
+        if (updated) {
+          return new Response("Successfuly updated entry", { status: 200 });
+        } else {
+          return new Response("Unable to find targeted team", { status: 500 });
+        }
+      }
+      default:
+        return new Response('Invalid POST ID', { status: 404 });
+    }
+
+  } catch (error) {
+    console.log(error);
+
+    return new Response(error, {
+      status: 500,
+    });
+  }
 }

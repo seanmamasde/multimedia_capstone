@@ -29,24 +29,21 @@ async function createTestTeam() {
 
     const teamname = prompt(`team name (default: ${defaultTeamname}):`, defaultTeamname);
     const memNum = prompt(`member num (1 to 4):`);
-    const valInput = prompt(`are all teammates ready (true/false):`);
-    const val = (valInput === "true");
 
-    const members = [null, null, null, null]
+    const members = ["", "", "", ""]
     for (let i = 0; i < memNum; i++)
     {
-        members[i] = prompt(`m${i + 1} uid:`);
+        members[i] = prompt(`m${i + 1} uname:`);
     }
     
     // Create the user
     const team = new Teams({
         teamname: teamname,
         memberNum: memNum,
-        uid1: members[0],
-        uid2: members[1],
-        uid3: members[2],
-        uid4: members[3],
-        ready: val
+        uname1: members[0],
+        uname2: members[1],
+        uname3: members[2],
+        uname4: members[3]
     });
 
     await team.save();
