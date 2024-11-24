@@ -1,0 +1,23 @@
+.teams-field {
+    margin: 1vw;
+    padding: 10px;
+}
+
+.teams-field > input {
+    font-size: xx-large;
+    font-weight: bold;
+    color: #aaa;
+    background-color: white;
+    border: #aaa 1px solid;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.teams-container {
+    margin-bottom: 2vh;
+    padding: 10px;
+    border: #aaa 1px solid;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
