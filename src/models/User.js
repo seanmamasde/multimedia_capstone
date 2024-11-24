@@ -16,12 +16,7 @@ const userSchema = new mongoose.Schema({
     validate: uuidValidator,
   },
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  teams: {
-    type: [String],
-    default: [],
-    validate: [uuidValidator, "Invalid UUID in teams array"],
-  },
+  password: { type: String, required: true }
 });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
