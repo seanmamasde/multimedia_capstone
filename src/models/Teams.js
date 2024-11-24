@@ -17,11 +17,10 @@ const teamSchema = new mongoose.Schema({
   },
   teamname: {type: String, required: true },
   memberNum: { type: Number, required: true },
-  uid1: { type: String, default: null },
-  uid2: { type: String, default: null },
-  uid3: { type: String, default: null },
-  uid4: { type: String, default: null },
-  ready: {type: Boolean, required: true}
+  uname1: { type: String, default: null },
+  uname2: { type: String, default: null },
+  uname3: { type: String, default: null },
+  uname4: { type: String, default: null }
 });
 
 export default mongoose.models.Teams || mongoose.model("Teams", teamSchema);

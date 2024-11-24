@@ -18,11 +18,11 @@ export default function Team() {
       return;
     }
 
-    let userId = "";
+    let username = "";
 
     try {
       const payload = JSON.parse(decodeJwt(token));
-      userId = payload.id;
+      username = payload.username;
     } catch (error) {
       console.error("Failed to decode token:", error);
       localStorage.removeItem("token");
@@ -30,7 +30,7 @@ export default function Team() {
     }
 
     const fetchUsers = async () => {
-      const res = await fetch(`/api/dbConnect/teamsByUid?uid=${userId}`);
+      const res = await fetch(`/api/dbConnect/teamsByUname?uname=${username}`);
       const data = await res.json();
       setTeams(data);
     };
@@ -38,11 +38,13 @@ export default function Team() {
     fetchUsers();
   }, [router]);
 
-  const RedirectEditTeams = (params) => {
+  const RedirectEditTeams = (e, params) => {
+    e.preventDefault();
     router.push(`/team/edit${params}`);
   }
 
-  const RedirectCreateTeam = () => {
+  const RedirectCreateTeam = (e) => {
+    e.preventDefault();
     router.push("/team/create")
   }
 
@@ -50,18 +52,17 @@ export default function Team() {
     return (
       <div className="teams-field">
         {teams.map((team, index) => (
-          <div key={index} className="teams-container" onClick={() => RedirectEditTeams(`?tid=${team.id}`)}>
+          <div key={index} className="teams-container" onClick={(e) => RedirectEditTeams(e, `?tid=${team.id}`)}>
             <h2>{team.teamname}</h2>
             <p>Members: {team.memberNum}</p>
-            <p>Ready: {team.ready ? "Yes" : "No"}</p>
             <ul>
               {Array.from({ length: team.memberNum }).map((_, i) => (
-                <li key={i}>{team[`u${i + 1}name`]}</li>
+                <li key={i}>{team[`uname${i + 1}`]}</li>
               ))}
             </ul>
           </div>
         ))}
-        <input type="button" value="+" onClick={RedirectCreateTeam}></input>
+        <input className = "teams-create" type="button" value="+" onClick={RedirectCreateTeam}></input>
       </div>
     );
   }
