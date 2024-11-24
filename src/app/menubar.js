@@ -60,8 +60,8 @@ export default function AppMenubar() {
       label: "打球",
       icon: "pi pi-folder",
       items: [
-        { label: "登記當周", icon: "pi pi-bolt", command: () => router.push("/play/register"), className: isActive("/play/register") },
-        { label: "預約下周", icon: "pi pi-palette", command: () => router.push("/play/reserve"), className: isActive("/play/reserve") },
+        { label: "登記當週", icon: "pi pi-bolt", command: () => router.push("/play/register"), className: isActive("/play/register") },
+        { label: "預約下週", icon: "pi pi-palette", command: () => router.push("/play/reserve"), className: isActive("/play/reserve") },
       ],
     },
     { label: "查詢紀錄", icon: "pi pi-table", command: () => router.push("/record"), className: isActive("/record") },
