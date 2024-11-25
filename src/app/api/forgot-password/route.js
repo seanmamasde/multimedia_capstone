@@ -1,32 +1,35 @@
 import nodemailer from "nodemailer";
+import crypto from "crypto";
+import dbConnect from "@/utils/db";
+import User from "@/models/User";
 
-// handle POST request
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 export async function POST(req) {
-  if (req.method !== "POST") {;
-    return new Response("Method Not Allowed", { status: 405 });
-  }
+  await dbConnect();
 
   const { email } = req.body;
 
-  // suppose the users are stored in a database
-  const users = [{ email: "user@example.com" }]; // simulate the users in the database
-  const user = users.find((u) => u.email === email);
+  const user = await User.findOne({
+    email,
+  });
 
   if (!user) {
-    return new Response({ error: "用戶不存在！" }, { status: 404 });
+    return new Response({ error: "找不到使用者" }, { status: 404 });
   }
 
-  // suppose the reset link is localhost:
-  const resetLink = `http://localhost:3000/reset-password?email=${email}`;
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  user.resetToken = resetToken;
+  user.resetTokenExpiration = Date.now() + 3600000; // 1 hour
+  await user.save();
 
-  // send email
-  const transporter = nodemailer.createTransport({
-    service: "Gmail",
-    auth: {
-      user: "your-email@gmail.com",
-      pass: "your-email-password",
-    },
-  });
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
   try {
     await transporter.sendMail({
@@ -36,9 +39,11 @@ export async function POST(req) {
       text: `請點擊以下連結重置密碼：${resetLink}`,
     });
 
-    return new Response({ message: "重置密碼連結已發送至您的電子郵件！" }, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return new Response({ error: "發送失敗，請稍後再試！" }, { status: 500 });
-  }
+    return new Response({ message: "重置密碼連結已發送至您的電子郵件" }, { status: 200 });
+    }
+
+    catch (err) {
+      console.error("Error in forgot-password route:", err);
+      return new Response({ error: "發送失敗，請稍後再試" }, { status: 500 });
+    }
 }
