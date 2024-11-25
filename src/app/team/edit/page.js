@@ -4,6 +4,7 @@ import AppMenubar from "../../menubar";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { decodeJwt } from "@/utils/jwtAuth";
+import "@/style/teams.css"
 
 export default function TeamEdit() {
     const [ team, setTeam ] = useState( { id: "",
