@@ -80,10 +80,10 @@ export default function Team() {
                 ))}
               </ul>
             </div>
-            <input type="button" value="✖" onClick={(e) => deleteTeam(e, team.id, team.teamname)}></input>
+            <input className="cursor-pointer" type="button" value="✖" onClick={(e) => deleteTeam(e, team.id, team.teamname)}></input>
           </div>
         ))}
-        <input className = "teams-create" type="button" value="+" onClick={RedirectCreateTeam}></input>
+        <input className="teams-create" type="button" value="+" onClick={RedirectCreateTeam}></input>
       </div>
     );
   }

@@ -174,8 +174,8 @@ export default function TeamEdit() {
                     </div>
                 ))}
 
-                <div className="team-edit-field">
-                    <button type="submit">完成編輯</button>
+                <div className="team-edit-field ">
+                    <button className="cursor-pointer" type="submit">完成編輯</button>
                 </div>
             </form>
         </div>
