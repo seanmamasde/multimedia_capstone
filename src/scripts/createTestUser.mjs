@@ -29,6 +29,9 @@ async function createTestUser() {
     }
   }
 
+  // Prompt for the email
+  const email = prompt("Email: ");
+
   const defaultUsername = `testuser${nextUserNumber}`;
   const username = prompt(`Username (default: ${defaultUsername}): `, defaultUsername);
 
@@ -47,6 +50,7 @@ async function createTestUser() {
 
   // Create the user
   const user = new User({
+    email,
     username,
     password: hashedPassword,
   });
