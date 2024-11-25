@@ -66,7 +66,7 @@ export default function Reserve() {
   const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i);
 
   const handleReserve = () => {
-    router.push(`/play/reserve?date=${selectedDate}`);
+    router.push(`/play/reserve/team_time?date=${selectedDate}`);
   };
 
   return (
