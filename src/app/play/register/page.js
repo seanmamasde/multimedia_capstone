@@ -65,15 +65,15 @@ export default function Register() {
 
   const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i);
 
-  const handleReserve = () => {
-    router.push(`/play/reserve?date=${selectedDate}`);
+  const handleRegister = () => {
+    router.push(`/play/register?date=${selectedDate}`);
   };
 
   return (
     <div>
       <AppMenubar />
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">登記當週 Register</h1>
+        <h1 className="text-2xl font-bold mb-6">登記當週 Registration</h1>
         {days.length > 0 ? (
           <>
             <div style={{ overflowX: 'auto' }}>
@@ -156,7 +156,7 @@ export default function Register() {
                 ))}
               </select>
               <button
-                onClick={handleReserve}
+                onClick={handleRegister}
                 style={{
                   backgroundColor: '#2196F3',
                   color: 'white',
@@ -166,7 +166,7 @@ export default function Register() {
                   cursor: 'pointer'
                 }}
               >
-                確定進入登記
+                開始登記
               </button>
             </div>
           </>
