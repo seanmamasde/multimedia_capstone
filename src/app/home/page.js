@@ -19,7 +19,7 @@ export default function Home() {
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                每人每天限登記／預約三格時段，並填志願序
+                每人每天限登記／預約三格時段
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
@@ -47,11 +47,11 @@ export default function Home() {
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                每天早上 10:00 開放下週同一天場地預約
+                每天半夜 12:00 開放下週同一天場地預約
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                每天早上 9:00 ~ 10:00 截止預約，進行抽籤
+                每天晚上 11:00 ~ 12:00 截止預約，進行抽籤
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
@@ -71,7 +71,7 @@ export default function Home() {
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                可登記候補，每個時段限額 4 組
+                可登記候補，每個時段限額 5 組
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
