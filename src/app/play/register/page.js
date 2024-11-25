@@ -66,7 +66,7 @@ export default function Register() {
   const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i);
 
   const handleRegister = () => {
-    router.push(`/play/register?date=${selectedDate}`);
+    router.push(`/play/register/team_time?date=${selectedDate}`);
   };
 
   return (
