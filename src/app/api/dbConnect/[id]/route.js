@@ -113,6 +113,16 @@ export async function POST(request, { params }) {
           return new Response("Unable to find targeted team", { status: 500 });
         }
       }
+      case "deleteTeam": {
+        // this is unsecure af rn
+        const { tid } = await request.json();
+        
+        await Teams.deleteOne({ id : tid }).catch(err => {
+                                        console.error(err);
+                                      });
+        
+        return new Response("delete success.", { status: 200 });
+      }
       default:
         return new Response('Invalid POST ID', { status: 404 });
     }

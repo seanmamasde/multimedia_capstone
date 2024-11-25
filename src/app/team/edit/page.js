@@ -135,7 +135,7 @@ export default function TeamEdit() {
             <AppMenubar />
             <h2>編輯隊伍</h2>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="team-edit-field">
                     <label htmlFor="teamName">隊伍名稱</label>
                     <input
                         type="text"
@@ -146,7 +146,7 @@ export default function TeamEdit() {
                     />
                 </div>
 
-                <div>
+                <div className="team-edit-field">
                     <label htmlFor="numMembers">隊伍人數</label>
                     <select
                         id="numMembers"
@@ -162,7 +162,7 @@ export default function TeamEdit() {
                 </div>
 
                 {[...Array(team.memberNum)].map((_, index) => (
-                    <div key={index}>
+                    <div key={index} className="team-edit-field">
                         <label htmlFor={`userName-${index}`}>成員 {index + 1} 帳號名稱:</label>
                         <input
                         type="text"
@@ -174,7 +174,7 @@ export default function TeamEdit() {
                     </div>
                 ))}
 
-                <div>
+                <div className="team-edit-field">
                     <button type="submit">完成編輯</button>
                 </div>
             </form>
