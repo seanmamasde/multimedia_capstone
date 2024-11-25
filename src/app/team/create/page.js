@@ -4,7 +4,7 @@ import AppMenubar from "../../menubar";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { decodeJwt } from "@/utils/jwtAuth";
-import { unstable_renderSubtreeIntoContainer } from "react-dom";
+import "@/style/teams.css"
 
 export default function createTeam() {
     const router = useRouter();
@@ -105,7 +105,7 @@ export default function createTeam() {
             <AppMenubar />
             <h2>建立隊伍</h2>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="team-edit-field">
                     <label htmlFor="teamName">隊伍名稱</label>
                     <input
                         type="text"
@@ -116,7 +116,7 @@ export default function createTeam() {
                     />
                 </div>
 
-                <div>
+                <div className="team-edit-field">
                     <label htmlFor="numMembers">隊伍人數</label>
                     <select
                         id="numMembers"
@@ -132,7 +132,7 @@ export default function createTeam() {
                 </div>
 
                 {[...Array(numMembers)].map((_, index) => (
-                    <div key={index}>
+                    <div key={index} className="team-edit-field">
                         <label htmlFor={`userName-${index}`}>成員 {index + 1} 帳號名稱:</label>
                         <input
                         type="text"
@@ -144,7 +144,7 @@ export default function createTeam() {
                     </div>
                 ))}
 
-                <div>
+                <div className="team-edit-field">
                     <button type="submit">建立</button>
                 </div>
             </form>
