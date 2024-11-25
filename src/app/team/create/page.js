@@ -4,7 +4,7 @@ import AppMenubar from "../../menubar";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { decodeJwt } from "@/utils/jwtAuth";
-import { unstable_renderSubtreeIntoContainer } from "react-dom";
+import "@/style/teams.css"
 
 export default function createTeam() {
     const router = useRouter();
