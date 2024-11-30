@@ -1,6 +1,6 @@
 "use client";
 
-import AppMenubar from "../../menubar";
+import AppMenubar from "../../components/menubar";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { decodeJwt } from "@/utils/jwtAuth";

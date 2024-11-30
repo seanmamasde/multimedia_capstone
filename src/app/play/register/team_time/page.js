@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AppMenubar from "../../../menubar";
+import AppMenubar from "../../../components/menubar";
 import { decodeJwt } from "@/utils/jwtAuth";
 
 export default function TeamTimeSelection() {

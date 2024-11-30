@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AppMenubar from "../../../menubar";
+import AppMenubar from "../../../components/menubar";
 
 export default function Confirmation() {
   const router = useRouter();

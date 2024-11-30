@@ -1,0 +1,76 @@
+.home-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.content-wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .rules-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rule-card {
+  padding: 16px;
+  border-top-width: 4px;
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+.rule-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: -20px;
+}
+
+.rule-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.rule-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.rule-items {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  color: #4b5563;
+}
+
+.rule-item {
+  display: flex;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.bullet {
+  margin-right: 8px;
+  font-size: 1rem;
+}

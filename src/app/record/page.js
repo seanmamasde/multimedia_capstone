@@ -1,4 +1,4 @@
-import AppMenubar from "../menubar";
+import AppMenubar from "../components/menubar";
 
 export default function Record() {
   return (
