@@ -2,14 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "primereact/button";
-import { Dropdown } from "primereact/dropdown";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
 import AppMenubar from "../../menubar";
-import "primereact/resources/primereact.min.css";
-import "primereact/resources/themes/saga-blue/theme.css";
-import "primeicons/primeicons.css";
 
 export default function Reserve() {
   const [days, setDays] = useState([]);
@@ -78,22 +71,15 @@ export default function Reserve() {
 
   const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i); // 生成時段 8:00 - 22:00
 
-  const transposedData = timeSlots.map((hour) => {
-    const rowData = { time: `${hour}:00` };
-    days.forEach((day) => {
-      rowData[day] = courtData[day]?.[`${hour.toString().padStart(2, "0")}:00`] || null;
-    });
-    return rowData;
-  });
-
   const handleReserve = () => {
-    router.push(`/play/reserve?date=${selectedDate}`);
+    router.push(`/play/reserve/team_time?date=${selectedDate}`);
   };
 
   return (
-    <div style={{ margin: 0, padding: 0, height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div>
       <AppMenubar />
-      <div style={{ flex: 1, overflow: "hidden",  paddingTop: "30px" }}>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">預約下週 Reservation</h1>
         {days.length > 0 ? (
           <>
             <div style={{ overflowX: "auto" }}>
@@ -226,34 +212,8 @@ export default function Reserve() {
             </div>
           </>
         ) : (
-          <p style={{ textAlign: "center" }}>載入中...</p>
+          <p>載入中...</p>
         )}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "10px",
-          height: "80px",
-          borderTop: "1px solid #ddd",
-          padding: "10px",
-        }}
-      >
-        <Dropdown
-          value={selectedDate}
-          options={days.map((day) => ({ label: day, value: day }))}
-          onChange={(e) => setSelectedDate(e.value)}
-          placeholder="選擇日期"
-          style={{ width: "150px" }}
-        />
-        <Button
-          label="預約"
-          icon="pi pi-check"
-          className="p-button-primary"
-          onClick={handleReserve}
-          style={{ width: "120px" }}
-        />
       </div>
     </div>
   );
