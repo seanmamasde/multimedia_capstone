@@ -102,18 +102,26 @@ export default function Confirmation() {
           </div>
 
           <div className="mt-6 flex gap-4">
+            {/* 確認登記按鈕 */}
             <button
               onClick={handleConfirm}
               disabled={isSubmitting}
               className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+              style={{
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
             >
               {isSubmitting ? '處理中...' : '確認登記'}
             </button>
             
+            {/* 返回按鈕 */}
             <button
               onClick={() => router.back()}
               disabled={isSubmitting}
               className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors disabled:bg-gray-300"
+              style={{
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
             >
               返回
             </button>

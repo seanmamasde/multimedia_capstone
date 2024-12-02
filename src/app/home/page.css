@@ -1,11 +1,13 @@
 .home-container {
   min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
 }
 
 .content-wrapper {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 32px 24px;
 }
 
 .title {
@@ -33,6 +35,7 @@
   border-top-width: 4px;
   background: #ffffff;
   border-radius: 8px;
+  min-height: 100px;
 }
 
 .rule-header {

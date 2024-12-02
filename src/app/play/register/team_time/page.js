@@ -118,7 +118,7 @@ export default function TeamTimeSelection() {
           <div className="mb-6 p-4 bg-gray-50 rounded">
             <h3 className="font-semibold mb-2">隊伍詳情</h3>
             <p>隊伍名稱: {teamDetails.teamname}</p>
-            <p>隊伍成員數量: {teamDetails.memberNum}</p>
+            <p>成員數量: {teamDetails.memberNum}</p>
             <div className="mt-2">
               <p>成員列表:</p>
               <ul className="list-disc pl-5">
