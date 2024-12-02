@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import dbConnect from "../utils/db.js";
 import Court from "../models/Court.js";
 import promptSync from "prompt-sync";
+import { Reservation } from "../models/Reservation.js";
 
 // Load environment variables
 dotenv.config();
@@ -38,24 +39,35 @@ async function clearCourts() {
             }
 
             try {
-                const result = await Court.deleteMany({
+                let result = await Court.deleteMany({
                     date: {
                         $gte: startDate,
                         $lte: endDate
                     }
                 });
                 console.log(`成功刪除 ${result.deletedCount} 筆資料`);
+                result = await Reservation.deleteMany({
+                    date: {
+                        $gte: startDate,
+                        $lte: endDate
+                    }
+                });
+                console.log("預約紀錄已清空");
             } catch (error) {
                 console.error("刪除資料時發生錯誤:", error);
+                console.error("清空預約紀錄時發生錯誤:", error);
             }
             break;
 
         case "2":
             try {
-                const result = await Court.deleteMany({});
+                let result = await Court.deleteMany({});
                 console.log(`成功刪除所有資料：共 ${result.deletedCount} 筆`);
+                result = await Reservation.deleteMany({});
+                console.log("所有預約紀錄已清空");
             } catch (error) {
                 console.error("刪除資料時發生錯誤:", error);
+                console.error("清空預約紀錄時發生錯誤:", error);
             }
             break;
 

@@ -10,6 +10,13 @@ export async function GET(req) {
     const startDate = new Date(searchParams.get('startDate'));
     const endDate = new Date(searchParams.get('endDate'));
     
+    if (!startDate || !endDate) {
+      return new Response(
+        JSON.stringify({ error: "開始日期或結束日期缺失" }),
+        { status: 400 }
+      );
+    }
+
     const courts = await Court.find({
       date: {
         $gte: startDate,
@@ -19,8 +26,11 @@ export async function GET(req) {
     
     return new Response(JSON.stringify(courts), { status: 200 });
   } catch (error) {
-    console.error('Error fetching courts:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    console.error("Error fetching courts:", error);
+    return new Response(
+      JSON.stringify({ error: "查詢場地時發生錯誤" }),
+      { status: 500 }
+    );
   }
 }
 
@@ -30,6 +40,13 @@ export async function POST(req) {
     
     const { date, timeSlot, teamId } = await req.json();
     
+    if (!date || !teamId || !timeSlot) {
+      return new Response(
+        JSON.stringify({ message: "缺少必要資訊" }),
+        { status: 400 }
+      );
+    }
+
     // Find the court document for this date and time
     let court = await Court.findOne({
       date: new Date(date),

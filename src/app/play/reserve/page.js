@@ -62,13 +62,13 @@ export default function Reserve() {
 
     const occupancyRate = (courtInfo.reserved / courtInfo.total) * 100;
 
-    // 判斷是否為該日期的第一志願
-    const isTopChoice = Object.values(courtData[date] || {}).reduce((maxRate, info) => {
-      const rate = (info.reserved / info.total) * 100;
-      return rate > maxRate ? rate : maxRate;
-    }, 0) === occupancyRate;
+    // // 判斷是否為該日期的第一志願
+    // const isTopChoice = Object.values(courtData[date] || {}).reduce((maxRate, info) => {
+    //   const rate = (info.reserved / info.total) * 100;
+    //   return rate > maxRate ? rate : maxRate;
+    // }, 0) === occupancyRate;
 
-    if (isTopChoice) return "#FFD700"; // 金色表示第一志願
+    // if (isTopChoice) return "#FFD700"; // 金色表示第一志願
     if (occupancyRate === 100) return "#FF0000";
     if (occupancyRate >= 50) return "#006400";
     if (occupancyRate > 0) return "#90EE90";

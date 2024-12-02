@@ -127,6 +127,7 @@ export async function POST(req) {
           break;
       }
       
+      court.reservedCourts += 1;
 
       // 保存更新的 Court
       await court.save();
@@ -140,14 +141,14 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (error) {
-  console.error("Error processing reservation:", error); // 這會打印錯誤
-  if (error instanceof Error) {
-    console.error('Error details:', error.message, error.stack);
-  }
+    console.error("Error processing reservation:", error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message, error.stack);
+    }
 
-  return new Response(
-    JSON.stringify({ message: "預約過程發生錯誤", error: error.message }),
-    { status: 500 }
-  );
-}
+    return new Response(
+      JSON.stringify({ message: "預約過程發生錯誤", error: error.message }),
+      { status: 500 }
+    );
+  }
 }

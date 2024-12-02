@@ -94,7 +94,7 @@ export default function TeamTimeSelection() {
     return true;
   };
 
-  const handleConfirmRegistration = () => {
+  const handleConfirmReservation = () => {
     if (!selectedTeam) {
       alert("請選擇隊伍！");
       return;
@@ -229,7 +229,7 @@ export default function TeamTimeSelection() {
 
         {/* Confirm Button */}
         <button
-          onClick={handleConfirmRegistration}
+          onClick={handleConfirmReservation}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors cursor-pointer"
         >
           確認預約
