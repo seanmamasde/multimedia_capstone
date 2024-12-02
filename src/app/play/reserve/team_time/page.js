@@ -125,9 +125,9 @@ export default function TeamTimeSelection() {
     <div>
       <AppMenubar />
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">登記隊伍與時段志願</h1>
+        <h1 className="text-2xl font-bold mb-6">選擇隊伍與時段志願</h1>
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">登記日期: {selectedDate}</h2>
+          <h2 className="text-lg font-semibold mb-2">預約日期: {selectedDate}</h2>
         </div>
 
         {/* Team Selection */}
@@ -232,7 +232,7 @@ export default function TeamTimeSelection() {
           onClick={handleConfirmRegistration}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors cursor-pointer"
         >
-          確認登記
+          確認預約
         </button>
       </div>
     </div>

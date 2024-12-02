@@ -1,24 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Button } from "primereact/button";
+import AppMenubar from "../../components/menubar";
 import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primeicons/primeicons.css";
 
-const CourtBookingSystem = () => {
+export default function Reserve() {
   const [days, setDays] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [courtData, setCourtData] = useState({});
+  const router = useRouter();
 
   useEffect(() => {
     const today = new Date();
     const generatedDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
-      date.setDate(today.getDate() + i);
+      date.setDate(today.getDate() + 7 + i);
       return date.toISOString().split("T")[0];
     });
 
@@ -59,6 +62,13 @@ const CourtBookingSystem = () => {
 
     const occupancyRate = (courtInfo.reserved / courtInfo.total) * 100;
 
+    // 判斷是否為該日期的第一志願
+    const isTopChoice = Object.values(courtData[date] || {}).reduce((maxRate, info) => {
+      const rate = (info.reserved / info.total) * 100;
+      return rate > maxRate ? rate : maxRate;
+    }, 0) === occupancyRate;
+
+    if (isTopChoice) return "#FFD700"; // 金色表示第一志願
     if (occupancyRate === 100) return "#FF0000";
     if (occupancyRate >= 50) return "#006400";
     if (occupancyRate > 0) return "#90EE90";
@@ -75,24 +85,29 @@ const CourtBookingSystem = () => {
     return rowData;
   });
 
+  const handleReserve = () => {
+    router.push(`/play/reserve/team_time?date=${selectedDate}`);
+  };
+
   return (
     <div
       style={{
         margin: 0,
         padding: 0,
         height: "100vh",
-        overflow: "hidden",
+        overflow: "hidden", // Disable page scrolling
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <div style={{ flex: 1, overflow: "hidden", paddingTop: "20px" }}>
+      <AppMenubar />
+      <div style={{ flex: 1, overflow: "auto", paddingTop: "40px" }}> {/* Reduced paddingTop */}
         {days.length > 0 ? (
-          <div style={{ height: "calc(100vh - 120px)", overflowY: "auto" }}>
+          <div style={{ paddingBottom: "80px" }}>
             <DataTable
               value={transposedData}
               scrollable
-              scrollHeight="calc(100vh - 120px)"
+              scrollHeight="calc(100vh - 200px)"
               tableStyle={{ minWidth: "100%" }}
               style={{
                 width: "100%",
@@ -101,6 +116,7 @@ const CourtBookingSystem = () => {
                 padding: 0,
               }}
             >
+              {/* Frozen Column (First Column) */}
               <Column
                 field="time"
                 header="時間"
@@ -111,6 +127,7 @@ const CourtBookingSystem = () => {
                 }}
                 frozen
               />
+              {/* Dynamic Columns for Dates */}
               {days.map((day) => (
                 <Column
                   key={day}
@@ -141,10 +158,14 @@ const CourtBookingSystem = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          gap: "10px",
+          gap: "20px",
           height: "80px",
           borderTop: "1px solid #ddd",
           padding: "10px",
+          backgroundColor: "white",
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10
         }}
       >
         <Dropdown
@@ -152,17 +173,18 @@ const CourtBookingSystem = () => {
           options={days.map((day) => ({ label: day, value: day }))}
           onChange={(e) => setSelectedDate(e.value)}
           placeholder="選擇日期"
-          style={{ width: "150px" }}
+          style={{
+            width: "150px",
+            marginRight: "10px"
+          }}
         />
         <Button
-          label="預訂"
-          icon="pi pi-check"
+          label="開始預約"
           className="p-button-primary"
-          style={{ width: "120px" }}
+          onClick={handleReserve}
+          style={{ width: "100px" }}
         />
       </div>
     </div>
   );
-};
-
-export default CourtBookingSystem;
+}

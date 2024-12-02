@@ -3,14 +3,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AppMenubar from "../../../menubar";
+import AppMenubar from "../../../components/menubar";
 
 export default function Confirmation() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teamDetails, setTeamDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const teamId = searchParams.get("team");
   const date = searchParams.get("date");
@@ -21,8 +20,6 @@ export default function Confirmation() {
   useEffect(() => {
     if (teamId) {
       fetchTeamDetails(teamId);
-    } else {
-      setLoading(false);
     }
   }, [teamId]);
 
@@ -32,13 +29,9 @@ export default function Confirmation() {
       if (response.ok) {
         const teamData = await response.json();
         setTeamDetails(teamData);
-      } else {
-        console.error("無法獲取隊伍詳情");
       }
     } catch (error) {
-      console.error("獲取隊伍詳情時發生錯誤:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching team details:", error);
     }
   };
 
@@ -58,34 +51,21 @@ export default function Confirmation() {
       });
 
       if (response.ok) {
-        alert("登記成功！");
+        alert("預約成功！");
         router.push("/play/reserve");
       } else {
         const error = await response.json();
-        alert(`登記失敗: ${error.message || "請稍後再試"}`);
+        alert(`預約失敗: ${error.message}`);
       }
     } catch (error) {
-      alert("登記過程發生錯誤，請稍後再試");
-      console.error("登記錯誤:", error);
+      alert("預約過程發生錯誤，請稍後再試");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>正在加載隊伍資料，請稍候...</p>
-      </div>
-    );
-  }
-
   if (!teamDetails) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>找不到隊伍資料，請返回並重試。</p>
-      </div>
-    );
+    return <div>載入中...</div>;
   }
 
   return (
@@ -128,18 +108,26 @@ export default function Confirmation() {
           </div>
 
           <div className="mt-6 flex gap-4">
+            {/* 確認登記按鈕 */}
             <button
               onClick={handleConfirm}
               disabled={isSubmitting}
               className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+              style={{
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
             >
-              {isSubmitting ? "處理中..." : "確認預約"}
+              {isSubmitting ? '處理中...' : '確認預約'}
             </button>
-
+            
+            {/* 返回按鈕 */}
             <button
               onClick={() => router.back()}
               disabled={isSubmitting}
               className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors disabled:bg-gray-300"
+              style={{
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
             >
               返回
             </button>
