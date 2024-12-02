@@ -4,7 +4,8 @@ import AppMenubar from "../../components/menubar";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { decodeJwt } from "@/utils/jwtAuth";
-import "@/style/teams.css"
+import "@/app/team/page.css"
+import "@/style/globals.css"
 
 export default function createTeam() {
     const router = useRouter();

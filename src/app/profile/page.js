@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import AppMenubar from '../menubar';
+import AppMenubar from "../components/menubar";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);

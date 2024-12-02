@@ -1,3 +1,4 @@
+// src/app/api/reserve_courts/route.js
 import dbConnect from "../../../utils/db";
 import Court from "../../../models/Court";
 import { Reservation }from "../../../models/Reservation.js";
@@ -9,6 +10,16 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const startDate = new Date(searchParams.get("startDate"));
     const endDate = new Date(searchParams.get("endDate"));
+    const teamId = searchParams.get("teamId");
+    
+    const reservation = await Reservation.findOne({ teamId });
+
+    if (!reservation) {
+      return new Response(
+        JSON.stringify({ error: "找不到相關預約" }),
+        { status: 404 }
+      );
+    }
 
     if (!startDate || !endDate) {
       return new Response(
