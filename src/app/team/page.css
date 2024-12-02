@@ -1,0 +1,55 @@
+
+
+.teams-table-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  margin-top: -20px;
+}
+
+.teams-table {
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+
+.teams-create {
+  display: block;
+  margin: 20px auto;
+}
+
+.p-dialog .p-dialog-header {
+  text-align: center;
+  font-weight: bold;
+}
+
+.p-button {
+  margin-left: -25px;
+  margin-right: -25px;
+}
+
+.p-button-plus {
+  border-radius: 10px;
+}
+
+.footer-container {
+  display: flex; /* Enable flexbox */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  margin-top: -5px;
+  margin-bottom: -5px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 32px;
+  text-align: center;
+}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AppMenubar from "../../../menubar";
+import AppMenubar from "../../../components/menubar";
 import { decodeJwt } from "@/utils/jwtAuth";
 
 export default function TeamTimeSelection() {
@@ -15,7 +15,11 @@ export default function TeamTimeSelection() {
   const [teamDetails, setTeamDetails] = useState(null);
   const [username, setUsername] = useState(null);
   const timeSlots = Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [preferences, setPreferences] = useState({
+    first: "",
+    second: "",
+    third: ""
+  });
 
   // Check authentication and fetch user's teams
   useEffect(() => {
@@ -72,27 +76,58 @@ export default function TeamTimeSelection() {
     }
   };
 
-  const handleTimeSlotSelection = (e) => {
-    setSelectedTimeSlot(e.target.value);
+  const handlePreferenceChange = (preference, value) => {
+    setPreferences(prev => ({
+      ...prev,
+      [preference]: value
+    }));
   };
 
-  const handleConfirmReservation = () => {
-    if (!selectedTeam || !selectedTimeSlot) {
-      alert("請選擇隊伍和時間段！");
+  const validatePreferences = () => {
+    // 檢查是否有重複的時段選擇
+    const selectedTimes = Object.values(preferences).filter(time => time !== "");
+    const uniqueTimes = new Set(selectedTimes);
+    if (selectedTimes.length !== uniqueTimes.size) {
+      alert("每個志願序必須選擇不同的時段！");
+      return false;
+    }
+    return true;
+  };
+
+  const handleConfirmRegistration = () => {
+    if (!selectedTeam) {
+      alert("請選擇隊伍！");
+      return;
+    }
+
+    if (!preferences.first) {
+      alert("請至少選擇第一志願時段！");
+      return;
+    }
+
+    if (!validatePreferences()) {
       return;
     }
     
-    // Add the date to the confirmation URL
-    router.push(`/play/reserve/confirmation?team=${selectedTeam}&time=${selectedTimeSlot}&date=${selectedDate}`);
+    // Construct the URL with all preferences
+    const registrationParams = new URLSearchParams({
+      team: selectedTeam,
+      date: selectedDate,
+      first: preferences.first,
+      second: preferences.second,
+      third: preferences.third
+    }).toString();
+
+    router.push(`/play/reserve/confirmation?${registrationParams}`);
   };
 
   return (
     <div>
       <AppMenubar />
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">選擇隊伍與時段</h1>
+        <h1 className="text-2xl font-bold mb-6">登記隊伍與時段志願</h1>
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">預約日期: {selectedDate}</h2>
+          <h2 className="text-lg font-semibold mb-2">登記日期: {selectedDate}</h2>
         </div>
 
         {/* Team Selection */}
@@ -132,30 +167,72 @@ export default function TeamTimeSelection() {
           </div>
         )}
 
-        {/* Time Slot Selection */}
+        {/* Time Slots Preferences */}
         <div className="mb-6">
-          <label htmlFor="timeSlotSelect" className="block mb-2">選擇時間段:</label>
-          <select
-            id="timeSlotSelect"
-            value={selectedTimeSlot}
-            onChange={handleTimeSlotSelection}
-            className="w-full max-w-md p-2 border rounded"
-          >
-            <option value="">請選擇時間段</option>
-            {timeSlots.map((slot) => (
-              <option key={slot} value={slot}>
-                {slot}
-              </option>
-            ))}
-          </select>
+          <h3 className="text-lg font-semibold mb-4">選擇時段志願序</h3>
+          <p className="text-sm text-gray-600 mb-4">請依照優先順序選擇時段，系統將依照志願序進行分配。第一志願為必填，第二、三志願為選填。</p>
+          
+          {/* First Preference */}
+          <div className="mb-4">
+            <label htmlFor="firstPreference" className="block mb-2">第一志願時段:</label>
+            <select
+              id="firstPreference"
+              value={preferences.first}
+              onChange={(e) => handlePreferenceChange('first', e.target.value)}
+              className="w-full max-w-md p-2 border rounded"
+            >
+              <option value="">請選擇時間段</option>
+              {timeSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Second Preference */}
+          <div className="mb-4">
+            <label htmlFor="secondPreference" className="block mb-2">第二志願時段: (選填)</label>
+            <select
+              id="secondPreference"
+              value={preferences.second}
+              onChange={(e) => handlePreferenceChange('second', e.target.value)}
+              className="w-full max-w-md p-2 border rounded"
+            >
+              <option value="">請選擇時間段</option>
+              {timeSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Third Preference */}
+          <div className="mb-4">
+            <label htmlFor="thirdPreference" className="block mb-2">第三志願時段: (選填)</label>
+            <select
+              id="thirdPreference"
+              value={preferences.third}
+              onChange={(e) => handlePreferenceChange('third', e.target.value)}
+              className="w-full max-w-md p-2 border rounded"
+            >
+              <option value="">請選擇時間段</option>
+              {timeSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Confirm Button */}
         <button
-          onClick={handleConfirmReservation}
+          onClick={handleConfirmRegistration}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors cursor-pointer"
         >
-          確認預約
+          確認登記
         </button>
       </div>
     </div>

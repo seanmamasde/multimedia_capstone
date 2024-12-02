@@ -1,63 +1,12 @@
 @import "primereact/resources/themes/saga-blue/theme.css";
+@import "primereact/resources/primereact.min.css";
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
-/* Global Menubar styles */
-.p-menubar {
-  height: 50px; /* Adjust Menubar height */
-  padding: 0 15px; /* Compact horizontal padding */
-  align-items: center; /* Center items vertically */
+html, body, .page {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  /* overflow: hidden !important; */
+  background-color: #f0f0f0 !important;
 }
-
-.p-menubar .p-menuitem-link {
-  font-size: 0.9rem; /* Slightly smaller font for compact look */
-  padding: 8px 12px; /* Reduce padding */
-}
-
-.p-menubar-start,
-.p-menubar-end {
-  height: 100%; /* Ensure alignment with Menubar height */
-  display: flex;
-  align-items: center;
-}
-
-/* Menu item hover effect */
-.p-menu .p-menuitem-link:hover {
-  background-color: #e0e0e0; /* Light hover background */
-}
-
-.p-menu .p-menuitem-link {
-  height: 32px;
-  font-size: 0.9rem;
-}
-
-
-/* DESKTOP MODE */
-@media (min-width: 768px) {
-  .p-menubar-root-list > .p-menuitem {
-    margin: 0 8px; /* Compact spacing between items (desktop only) */
-  }
-
-  .p-menubar .p-submenu-list .p-menuitem {
-    padding-left: 0; /* Remove indentation for desktop submenu */
-    border-radius: 0 !important; /* Remove border radius */
-  }
-}
-
-/* MOBILE MODE */
-@media (max-width: 767px) {
-  .p-menubar-root-list > .p-menuitem {
-    border-radius: 0px;
-  }
-
-  .p-menubar .p-submenu-list .p-menuitem {
-    border-radius: 0 !important; /* Remove border radius */
-  }
-
-  .p-menubar-root-list .p-menuitem-link {
-    padding-left: 16px; /* Indent the text inside submenu items */
-    border-radius: 0 !important; /* Remove border radius */
-  }
-}
-
-

@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { Menubar } from "primereact/menubar";
-import { Menu } from "primereact/menu"; // Import Menu for avatar dropdown
-import { Avatar } from "primereact/avatar";
 import { useRouter, usePathname } from "next/navigation";
-import styles from "../style/menubar.module.css";
+import { Menubar } from "primereact/menubar";
+import { Menu } from "primereact/menu";
+import { Avatar } from "primereact/avatar";
+import "../components/menubar.css";
 
 export default function AppMenubar() {
   const [user, setUser] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
-  const avatarMenu = useRef(null); // Ref for the avatar menu
+  const avatarMenu = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -51,21 +51,45 @@ export default function AppMenubar() {
     router.push("/login");
   };
 
-  const isActive = (route) => (pathname === route ? styles.activeMenuItem : "");
+  const isActive = (route) => (pathname === route ? "activeMenuItem" : "");
 
   const items = [
-    { label: "首頁", icon: "pi pi-home", command: () => router.push("/home"), className: isActive("/home") },
-    { label: "我的隊伍", icon: "pi pi-users", command: () => router.push("/team"), className: isActive("/team") },
+    {
+      label: "首頁",
+      icon: "pi pi-home",
+      command: () => router.push("/home"),
+      className: isActive("/home"),
+    },
+    {
+      label: "我的隊伍",
+      icon: "pi pi-users",
+      command: () => router.push("/team"),
+      className: isActive("/team"),
+    },
     {
       label: "打球",
       icon: "pi pi-folder",
       items: [
-        { label: "登記當週", icon: "pi pi-bolt", command: () => router.push("/play/register"), className: isActive("/play/register") },
-        { label: "預約下週", icon: "pi pi-palette", command: () => router.push("/play/reserve"), className: isActive("/play/reserve") },
+        {
+          label: "登記當週",
+          icon: "pi pi-bolt",
+          command: () => router.push("/play/register"),
+          className: isActive("/play/register"),
+        },
+        {
+          label: "預約下週",
+          icon: "pi pi-palette",
+          command: () => router.push("/play/reserve"),
+          className: isActive("/play/reserve"),
+        },
       ],
     },
-    { label: "查詢紀錄", icon: "pi pi-table", command: () => router.push("/record"), className: isActive("/record") },
-    { label: "關於我們", icon: "pi pi-info-circle", command: () => router.push("/about"), className: isActive("/about") },
+    {
+      label: "查詢紀錄",
+      icon: "pi pi-table",
+      command: () => router.push("/record"),
+      className: isActive("/record"),
+    },
   ];
 
   const avatarMenuItems = [
@@ -79,7 +103,7 @@ export default function AppMenubar() {
       alt="logo"
       src="/assets/nycu_logo.svg"
       height="16"
-      className={styles.logo}
+      className="logo"
     />
   );
 
@@ -88,20 +112,15 @@ export default function AppMenubar() {
       <Avatar
         label={user[0].toUpperCase()}
         shape="circle"
-        className={`${styles.customAvatar} p-avatar-circle`}
-        onClick={(e) => avatarMenu.current.toggle(e)} // Open the avatar dropdown
+        className="customAvatar p-avatar-circle"
+        onClick={(e) => avatarMenu.current.toggle(e)}
       />
-      <Menu
-        model={avatarMenuItems}
-        popup
-        ref={avatarMenu}
-        className={styles.avatarMenu}
-      />
+      <Menu model={avatarMenuItems} popup ref={avatarMenu} className="avatarMenu" />
     </div>
   );
 
   return (
-    <div className={styles.customMenubar}>
+    <div className="customMenubar">
       <Menubar model={items} start={start} end={end} />
     </div>
   );

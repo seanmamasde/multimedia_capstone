@@ -1,18 +1,23 @@
 "use client";
 
-import AppMenubar from "../menubar";
-import { useEffect, useState } from 'react';
+import AppMenubar from "../components/menubar";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import "@/style/teams.css"
 import { decodeJwt } from "@/utils/jwtAuth";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import "./page.css";
 
 export default function Team() {
   const [teams, setTeams] = useState([]);
   const [refresh, setRefresh] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteData, setDeleteData] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
@@ -39,60 +44,137 @@ export default function Team() {
     fetchUsers();
   }, [router, refresh]);
 
-  const RedirectEditTeams = (e, params) => {
-    e.preventDefault();
+  const RedirectEditTeams = (params) => {
     router.push(`/team/edit${params}`);
-  }
+  };
 
-  const RedirectCreateTeam = (e) => {
-    e.preventDefault();
-    router.push("/team/create")
-  }
+  const RedirectCreateTeam = () => {
+    router.push("/team/create");
+  };
 
-  const deleteTeam = (e, tid, tname) => {
-    e.preventDefault();
+  const deleteTeam = async () => {
+    if (!deleteData) return;
 
-    const confirmDelete = window.confirm(`確定要刪除${ tname }嗎?`);
-    if (!confirmDelete) return;
+    const { id } = deleteData;
 
-    fetch("/api/dbConnect/deleteTeam", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ tid: tid })
-      });
-    
-    setRefresh(prev => !prev);
-  }
+    await fetch("/api/dbConnect/deleteTeam", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tid: id }),
+    });
 
-  const RenderTeams = () => {
+    setConfirmDelete(false);
+    setDeleteData(null);
+    setRefresh((prev) => !prev);
+  };
+
+  const actionTemplate = (rowData) => {
     return (
-      <div className="teams-field">
-        {teams.map((team, index) => (
-          <div key={index} className="teams-container">
-            <div onClick={(e) => RedirectEditTeams(e, `?tid=${team.id}`)}>
-              <h2>{team.teamname}</h2>
-              <p>Members: {team.memberNum}</p>
-              <ul>
-                {Array.from({ length: team.memberNum }).map((_, i) => (
-                  <li key={i}>{team[`uname${i + 1}`]}</li>
-                ))}
-              </ul>
-            </div>
-            <input className="cursor-pointer" type="button" value="✖" onClick={(e) => deleteTeam(e, team.id, team.teamname)}></input>
-          </div>
-        ))}
-        <input className="teams-create" type="button" value="+" onClick={RedirectCreateTeam}></input>
+      <div className="action-buttons">
+        <Button
+          icon="pi pi-pencil"
+          className="p-button-text p-button-info"
+          onClick={() => RedirectEditTeams(`?tid=${rowData.id}`)}
+        />
+        <Button
+          icon="pi pi-trash"
+          className="p-button-text p-button-danger"
+          onClick={() => {
+            setConfirmDelete(true);
+            setDeleteData(rowData);
+          }}
+        />
       </div>
     );
-  }
+  };
+
+  const emptyPlaceholder = (data) => {
+    return data ? data : "-";
+  };
+
+  const dialogFooter = (
+    <div>
+      <Button
+        label="取消"
+        icon="pi pi-times"
+        className="p-button-text"
+        onClick={() => setConfirmDelete(false)}
+      />
+      <Button
+        label="確認刪除"
+        icon="pi pi-check"
+        className="p-button-danger"
+        onClick={deleteTeam}
+      />
+    </div>
+  );
+
+  const renderFooter = () => {
+    return (
+      <div className="footer-container">
+        <Button
+          icon="pi pi-plus"
+          label="新增隊伍"
+          className="p-button-text p-button-plus"
+          onClick={RedirectCreateTeam}
+        />
+      </div>
+    );
+  };
 
   return (
     <div>
       <AppMenubar />
-      <h1>我的隊伍</h1>
-      <RenderTeams />
+      <br />
+      <h1 className="title">隊伍管理</h1>
+      <div className="teams-table-container">
+        <DataTable
+          value={teams}
+          className="teams-table"
+          stripedRows
+          tableStyle={{ minWidth: "50rem" }}
+          footer={renderFooter()} // Provide a footer as a div
+        >
+          <Column field="teamname" header="隊伍名稱"></Column>
+          <Column
+            field="uname1"
+            header="成員 1"
+            body={(rowData) => emptyPlaceholder(rowData.uname1)}
+          ></Column>
+          <Column
+            field="uname2"
+            header="成員 2"
+            body={(rowData) => emptyPlaceholder(rowData.uname2)}
+          ></Column>
+          <Column
+            field="uname3"
+            header="成員 3"
+            body={(rowData) => emptyPlaceholder(rowData.uname3)}
+          ></Column>
+          <Column
+            field="uname4"
+            header="成員 4"
+            body={(rowData) => emptyPlaceholder(rowData.uname4)}
+          ></Column>
+          <Column
+            body={actionTemplate}
+            header="操作"
+            alignHeader="center"
+            style={{ textAlign: "center" }}
+          ></Column>
+        </DataTable>
+
+      </div>
+      <Dialog
+        header="確認刪除"
+        visible={confirmDelete}
+        style={{ width: "400px" }}
+        modal
+        footer={dialogFooter}
+        onHide={() => setConfirmDelete(false)}
+      >
+        <p>確定要刪除 {deleteData?.teamname} 嗎?</p>
+      </Dialog>
     </div>
   );
 }

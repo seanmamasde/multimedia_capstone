@@ -1,0 +1,91 @@
+.logo {
+  margin-right: 20px;
+}
+
+.customAvatar {
+  height: 28px !important;
+  width: 28px !important;
+  font-size: 0.9rem !important;
+  background-color: #dfe2e6 !important;
+  color: #434343 !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p-menu {
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.activeMenuItem {
+  background-color: #e5e5e5;
+  color: #ffffff !important;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.activeMenuItem:hover {
+  background-color: #e5e5e5;
+  color: #ffffff;
+}
+
+.avatarMenu {
+  width: 180px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.p-menubar {
+  height: 50px;
+  padding: 0 15px;
+  align-items: center;
+}
+
+.p-menubar .p-menuitem-link {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+.p-menubar-start,
+.p-menubar-end {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.p-menu .p-menuitem-link:hover {
+  background-color: #e0e0e0;
+}
+
+.p-menu .p-menuitem-link {
+  height: 32px;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 768px) {
+  .p-menubar-root-list > .p-menuitem {
+    margin: 0 8px;
+  }
+
+  .p-menubar .p-submenu-list .p-menuitem {
+    padding-left: 0;
+    border-radius: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .p-menubar-root-list > .p-menuitem {
+    border-radius: 0px;
+  }
+
+  .p-menubar .p-submenu-list .p-menuitem {
+    border-radius: 0 !important;
+  }
+
+  .p-menubar-root-list .p-menuitem-link {
+    padding-left: 16px;
+    border-radius: 0 !important;
+  }
+}

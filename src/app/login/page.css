@@ -1,0 +1,114 @@
+/* make the entire login page unscrollable */
+html, body, .page {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background-color: #f0f0f0 !important;
+}
+
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  margin: 0;
+  overflow: hidden !important;
+}
+
+.login-container {
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 20px;
+  margin-top: -10px;
+}
+
+.error-text {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-icon .pi {
+  position: absolute;
+  left: 10px;
+  z-index: 100;
+}
+
+.input-with-icon .pi-envelope {
+  position: absolute;
+  left: 10px;
+  z-index: 100;
+}
+
+.input-with-icon input,
+.input-with-icon .p-password input {
+  width: 100%;
+  padding-left: 35px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkbox-remember {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label {
+  margin-left: 10px;
+}
+
+.forgot-password {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.submit-button {
+  width: 100%;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px;
+  margin-bottom: -10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
+}
