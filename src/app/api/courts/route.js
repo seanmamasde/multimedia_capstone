@@ -2,6 +2,26 @@
 import dbConnect from "../../../utils/db";
 import Court from "../../../models/Court";
 
+// Function to generate court letters
+const COURT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+// Randomly select an available court
+function selectAvailableCourt(existingReservedCourts) {
+  // Find courts that haven't been reserved
+  const availableCourts = COURT_LETTERS.filter(
+    court => !existingReservedCourts.includes(court)
+  );
+
+  // If no courts are available, return null
+  if (availableCourts.length === 0) {
+    return null;
+  }
+
+  // Randomly select from available courts
+  const randomIndex = Math.floor(Math.random() * availableCourts.length);
+  return availableCourts[randomIndex];
+}
+
 export async function GET(req) {
   try {
     await dbConnect();
@@ -59,7 +79,10 @@ export async function POST(req) {
         date: new Date(date),
         timeSlot: timeSlot,
         reservedCourts: 0,
-        totalCourts: 6  // Assuming 6 is the total number of courts
+        totalCourts: 6,
+        firstChoiceTeams: [],
+        secondChoiceTeams: [],
+        thirdChoiceTeams: []
       });
     }
     
@@ -71,14 +94,36 @@ export async function POST(req) {
       );
     }
     
+    // Randomly select an available court
+    const assignedCourt = selectAvailableCourt(
+      court.firstChoiceTeams.concat(
+        court.secondChoiceTeams, 
+        court.thirdChoiceTeams
+      )
+    );
+
+    // If no court is available, reject the registration
+    if (assignedCourt === null) {
+      return new Response(
+        JSON.stringify({ message: '該時段已無場地可供登記' }), 
+        { status: 400 }
+      );
+    }
+    
     // Increment the reserved courts count
     court.reservedCourts += 1;
+    
+    // Add team to first choice teams with assigned court
+    court.firstChoiceTeams.push(`${teamId}-${assignedCourt}`);
     
     // Save the updated court document
     await court.save();
     
     return new Response(
-      JSON.stringify({ message: '登記成功' }), 
+      JSON.stringify({ 
+        message: '登記成功', 
+        assignedCourt: assignedCourt 
+      }), 
       { status: 200 }
     );
   } catch (error) {

@@ -1,3 +1,4 @@
+// src/app/api/dbConnect/[id]/route.js
 import dotenv from "dotenv";
 import dbConnect from "../../../../utils/db.js";
 import Teams from "../../../../models/Teams.js";

@@ -1,4 +1,3 @@
-// src/app/play/register/confirmation/page.js
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -10,6 +9,7 @@ export default function Confirmation() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teamDetails, setTeamDetails] = useState(null);
+  const [assignedCourt, setAssignedCourt] = useState(null);
 
   const teamId = searchParams.get('team');
   const timeSlot = searchParams.get('time');
@@ -48,12 +48,14 @@ export default function Confirmation() {
         }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        alert('登記成功！');
+        setAssignedCourt(result.assignedCourt);
+        alert(`登記成功！已分配場地：${result.assignedCourt}`);
         router.push('/play/register');
       } else {
-        const error = await response.json();
-        alert(`登記失敗: ${error.message}`);
+        alert(`登記失敗: ${result.message}`);
       }
     } catch (error) {
       alert('登記過程發生錯誤，請稍後再試');
