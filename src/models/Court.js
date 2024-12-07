@@ -6,6 +6,8 @@ const courtSchema = new mongoose.Schema({
   timeSlot: { type: String, required: true },
   reservedCourts: { type: Number, default: 0 },
   totalCourts: { type: Number, default: 6 },
+  teams: { type: Map, of: String },  //tid:court
+  remainUserforEachCourt:{type:Map,of:Number},
   firstChoiceTeams: [{ 
     type: String, 
     // Format: teamId-courtLetter (e.g., "team123-A")

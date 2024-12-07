@@ -1,6 +1,7 @@
 // src/app/api/courts/route.js
 import dbConnect from "../../../utils/db";
 import Court from "../../../models/Court";
+import { messages } from "@cfworker/web";
 
 // Function to generate court letters
 const COURT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -29,6 +30,29 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const startDate = new Date(searchParams.get('startDate'));
     const endDate = new Date(searchParams.get('endDate'));
+    const teamId = new String(searchParams.get("teamId"));
+
+    if (!teamId) {
+      return new Response(
+        JSON.stringify({ error: "缺少隊伍 ID" }),
+        { status: 300 }
+      );
+    }
+
+    const record = await Court.find({ [`teams.${teamId}`]: { $exists: true } });
+    const exists = record.length > 0;
+    if (exists) {
+      return new Response(
+        JSON.stringify(record),
+        { status: 200 }
+      );
+    }
+    // if (!record) {
+    //   return new Response(
+    //     JSON.stringify({error:"..."}),
+    //     { status: 408 }
+    //   );
+    // }
     
     if (!startDate || !endDate) {
       return new Response(
@@ -78,6 +102,7 @@ export async function POST(req) {
       court = new Court({
         date: new Date(date),
         timeSlot: timeSlot,
+        teams : new Map(),
         reservedCourts: 0,
         totalCourts: 6,
         firstChoiceTeams: [],
@@ -110,6 +135,33 @@ export async function POST(req) {
       );
     }
     
+    let venue = "";
+    switch (court.reservedCourts) {
+      case 0:
+        venue="A";
+        break;
+      case 1:
+        venue="B";
+        break;
+      case 2:
+        venue="C";
+        break;
+      case 3:
+        venue="D";
+        break;  
+      case 4:
+        venue="E";
+        break; 
+      case 5:
+        venue="F";
+        break;
+      default:
+        venue=""
+        break;
+    }
+
+    court.teams.set(teamId, venue);
+    // court.teams.set(teamId, 'A');
     // Increment the reserved courts count
     court.reservedCourts += 1;
     
