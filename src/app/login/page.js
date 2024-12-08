@@ -55,8 +55,6 @@ export default function LoginPage() {
         <h1 className="title">羽球場地預約系統</h1>
         {error && <p className="error-text">帳號或密碼錯誤</p>}
         <form onSubmit={handleSubmit} className="form">
-
-          {/* account field */}
           <div className="form-field">
             <span className="input-with-icon">
               <i className="pi pi-user"></i>
@@ -68,8 +66,6 @@ export default function LoginPage() {
               />
             </span>
           </div>
-
-          {/* password field */}
           <div className="form-field">
             <span className="input-with-icon">
               <i className="pi pi-lock"></i>
@@ -80,14 +76,9 @@ export default function LoginPage() {
                 toggleMask
                 feedback={false}
                 required
-                className="w-full"
-                pt={{ iconField: { root: { className: 'w-full' } } }}
               />
             </span>
           </div>
-
-
-          {/* remember me checkbox */}
           <div className="checkbox-group">
             <div className="checkbox-remember">
               <Checkbox
@@ -95,21 +86,16 @@ export default function LoginPage() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.checked)}
               />
-              <label htmlFor="rememberMe" className="checkbox-label">
-                記住我
-              </label>
+              <label htmlFor="rememberMe">記住我</label>
             </div>
-            <Button
-              className="forgot-password"
-              onClick={() => router.push("login/forgot-password")}
-              text
-            >
-              忘記密碼？
-            </Button>
           </div>
-
-          {/* login button */}
           <Button label="登入" type="submit" className="submit-button" />
+          <Button
+            label="註冊"
+            type="button"
+            className="register-button"
+            onClick={() => router.push("login/register")}
+          />
         </form>
       </Card>
     </div>
