@@ -133,8 +133,8 @@ export default function Record() {
   return (
     <div>
       <AppMenubar />
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-6">查詢紀錄</h1>
+      <div className="content-wrapper text-center">
+        <h1 className="title">查詢紀錄</h1>
         <table className="w-full max-w-4xl border-collapse border">
           <thead className="bg-gray-100">
             <tr>
