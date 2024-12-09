@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from "../../../utils/db";
-import Record from "@/models/Record"; // 根據實際路徑調整
+import Record from "@/models/Record";
 
 export async function GET(request) {
   try {

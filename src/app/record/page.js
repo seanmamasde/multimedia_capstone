@@ -1,3 +1,4 @@
+// src/app/record/page.js
 "use client";
 import React, { useState, useEffect } from "react";
 import AppMenubar from "../components/menubar";
@@ -19,6 +20,45 @@ export default function Record() {
   const checkStatus = () => {
     return "已登記";
   }
+
+  const handleCancelRegistration = async (record) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch('/api/courts/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          date: record.originalDate,
+          timeSlot: record.time,
+          teamId: record.teamId
+        })
+      });
+
+      if (response.ok) {
+        // Remove the cancelled record from the list
+        setRecords(records.filter(r => 
+          !(r.date === record.date && 
+            r.time === record.time && 
+            r.teamName === record.teamName)
+        ));
+        alert('取消登記成功');
+      } else {
+        const errorData = await response.json();
+        alert(`取消登記失敗: ${errorData.message}`);
+      }
+    } catch (err) {
+      console.error('Error cancelling registration:', err);
+      alert('取消登記時發生錯誤');
+    }
+  };
 
   useEffect(() => {
     const fetchUserRecords = async () => {
@@ -54,6 +94,7 @@ export default function Record() {
             const teams = court.teams;
             formattedRecords.push({
               teamName: team.teamname,
+              teamId: team.id,
               date: formatDate(court.date),
               time: court.timeSlot,
               status: checkStatus(),
@@ -86,15 +127,15 @@ export default function Record() {
     fetchUserRecords();
   }, [router]);
 
-  if (loading) return <div>載入中...</div>;
-  if (error) return <div>發生錯誤: {error}</div>;
+  if (loading) return <div className="flex justify-center items-center h-screen">載入中...</div>;
+  if (error) return <div className="flex justify-center items-center h-screen">發生錯誤: {error}</div>;
 
   return (
     <div>
       <AppMenubar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold mb-6">查詢紀錄</h1>
-        <table className="w-full border-collapse border">
+        <table className="w-full max-w-4xl border-collapse border">
           <thead className="bg-gray-100">
             <tr>
               <th className="border p-2">隊伍名稱</th>
@@ -102,12 +143,13 @@ export default function Record() {
               <th className="border p-2">時間</th>
               <th className="border p-2">狀態</th>
               <th className="border p-2">場地</th>
+              <th className="border p-2">操作</th>
             </tr>
           </thead>
           <tbody>
             {records.length === 0 ? (
               <tr>
-                <td colSpan="5" className="text-center p-4">
+                <td colSpan="6" className="text-center p-4">
                   沒有相關紀錄
                 </td>
               </tr>
@@ -119,6 +161,14 @@ export default function Record() {
                   <td className="border p-2">{record.time}</td>
                   <td className="border p-2">{record.status}</td>
                   <td className="border p-2">{record.venue}</td>
+                  <td className="border p-2">
+                    <button 
+                      onClick={() => handleCancelRegistration(record)}
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors cursor-pointer"
+                    >
+                      取消登記
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
