@@ -13,7 +13,7 @@ const courtSchema = new mongoose.Schema({
     type: String, 
     validate: {
       validator: function(v) {
-        return /^(.*)-[A-F]$/.test(v);
+        return /^(.*?)(?:-[A-F])?$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
@@ -22,7 +22,7 @@ const courtSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return /^(.*)-[A-F]$/.test(v);
+        return /^(.*?)(?:-[A-F])?$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
@@ -31,7 +31,7 @@ const courtSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return /^(.*)-[A-F]$/.test(v);
+        return /^(.*?)(?:-[A-F])?$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
