@@ -1,7 +1,7 @@
 // src/app/api/reserve_courts/route.js
 import dbConnect from "../../../utils/db";
 import Court from "../../../models/Court";
-import { Reservation }from "../../../models/Reservation.js";
+import { Reservation } from "../../../models/Reservation.js";
 
 export async function GET(req) {
   try {
@@ -10,24 +10,8 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const startDate = new Date(searchParams.get("startDate"));
     const endDate = new Date(searchParams.get("endDate"));
-    const teamId = new String(searchParams.get("teamId"));
-
-    if (!teamId) {
-      return new Response(
-        JSON.stringify({ error: "缺少隊伍 ID" }),
-        { status: 300 }
-      );
-    }
     
-    const reservation = await Reservation.findOne({ teamId });
-
-    if (!reservation) {
-      return new Response(
-        JSON.stringify({ error: "找不到相關預約" }),
-        { status: 404 }
-      );
-    }
-
+    // Remove teamId check since we're just fetching available courts
     if (!startDate || !endDate) {
       return new Response(
         JSON.stringify({ error: "開始日期或結束日期缺失" }),
@@ -88,7 +72,7 @@ export async function POST(req) {
         second: second || null,
         third: third || null,
       },
-      status: "pending", // 初始狀態為 pending
+      status: "pending",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -107,36 +91,15 @@ export async function POST(req) {
       );
 
       // 將 teamId 加入對應的志願欄位
-      switch (priority) {
-        case "first":
-          if (!court.firstChoiceTeams) {
-            court.firstChoiceTeams = []; // 如果未定義，初始化為空陣列
-          }
-          if (!court.firstChoiceTeams.includes(teamId)) {
-            court.firstChoiceTeams.push(teamId);
-          }
-          break;
-        case "second":
-          if (!court.secondChoiceTeams) {
-            court.secondChoiceTeams = []; // 如果未定義，初始化為空陣列
-          }
-          if (!court.secondChoiceTeams.includes(teamId)) {
-            court.secondChoiceTeams.push(teamId);
-          }
-          break;
-        case "third":
-          if (!court.thirdChoiceTeams) {
-            court.thirdChoiceTeams = []; // 如果未定義，初始化為空陣列
-          }
-          if (!court.thirdChoiceTeams.includes(teamId)) {
-            court.thirdChoiceTeams.push(teamId);
-          }
-          break;
+      const choiceField = `${priority}ChoiceTeams`;
+      if (!court[choiceField]) {
+        court[choiceField] = [];
+      }
+      if (!court[choiceField].includes(teamId)) {
+        court[choiceField].push(teamId);
       }
       
       court.reservedCourts += 1;
-
-      // 保存更新的 Court
       await court.save();
     }
 
@@ -159,3 +122,40 @@ export async function POST(req) {
     );
   }
 }
+
+// reservation/page.js
+const fetchCourtData = async (startDate, endDate) => {
+  try {
+    // Update the endpoint to match the API route
+    const response = await fetch(
+      `/api/reserve_courts?startDate=${startDate}&endDate=${endDate}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+
+    const transformed = {};
+    data.forEach((court) => {
+      const dateKey = new Date(court.date).toISOString().split("T")[0];
+      if (!transformed[dateKey]) {
+        transformed[dateKey] = {};
+      }
+      transformed[dateKey][court.timeSlot] = {
+        reserved: court.reservedCourts,
+        total: court.totalCourts,
+        firstChoiceTeams: court.firstChoiceTeams || [],
+        secondChoiceTeams: court.secondChoiceTeams || [],
+        thirdChoiceTeams: court.thirdChoiceTeams || [],
+      };
+    });
+    
+    setCourtData(transformed);
+  } catch (error) {
+    console.error("Error fetching court data:", error);
+    // You might want to set an error state here to show to the user
+    throw error;
+  }
+};

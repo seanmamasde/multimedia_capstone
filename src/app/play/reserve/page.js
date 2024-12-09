@@ -35,27 +35,39 @@ export default function Reserve() {
   const fetchCourtData = async (startDate, endDate) => {
     try {
       const response = await fetch(
-        `/api/courts?startDate=${startDate}&endDate=${endDate}`
+        `/api/reserve_courts?startDate=${startDate}&endDate=${endDate}`
       );
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
       const data = await response.json();
-
+  
+      // 只處理第一志願
       const transformed = {};
       data.forEach((court) => {
         const dateKey = new Date(court.date).toISOString().split("T")[0];
         if (!transformed[dateKey]) {
           transformed[dateKey] = {};
         }
-        transformed[dateKey][court.timeSlot] = {
-          reserved: court.reservedCourts,
-          total: court.totalCourts,
-        };
+  
+        // 填入第一志願的資訊
+        if (court.firstChoiceTeams && court.firstChoiceTeams.length > 0) {
+          transformed[dateKey][court.timeSlot] = {
+            reserved: court.reservedCourts,
+            total: court.totalCourts,
+            firstChoiceTeams: court.firstChoiceTeams,
+          };
+        }
       });
+  
       setCourtData(transformed);
     } catch (error) {
       console.error("Error fetching court data:", error);
     }
   };
-
+  
   const getColorForTimeSlot = (date, timeSlot) => {
     const courtInfo = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
     if (!courtInfo) return "white";
