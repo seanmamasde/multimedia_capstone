@@ -8,12 +8,12 @@ const courtSchema = new mongoose.Schema({
   totalCourts: { type: Number, default: 6 },
   teams: { type: Map, of: String },  //tid:court
   remainUserforEachCourt:{type:Map,of:Number},
+  // Format: teamId-courtLetter (e.g., "team123-A")
   firstChoiceTeams: [{ 
     type: String, 
-    // Format: teamId-courtLetter (e.g., "team123-A")
     validate: {
       validator: function(v) {
-        return /^[^-]+-[A-F]$/.test(v);
+        return /^(.*)-[A-F]$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
@@ -22,7 +22,7 @@ const courtSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return /^[^-]+-[A-F]$/.test(v);
+        return /^(.*)-[A-F]$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
@@ -31,7 +31,7 @@ const courtSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return /^[^-]+-[A-F]$/.test(v);
+        return /^(.*)-[A-F]$/.test(v);
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
