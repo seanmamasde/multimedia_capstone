@@ -24,7 +24,7 @@ export async function GET(req) {
     if (!reservation) {
       return new Response(
         JSON.stringify({ error: "找不到相關預約" }),
-        { status: 408 }
+        { status: 404 }
       );
     }
 

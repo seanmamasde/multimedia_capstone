@@ -1,26 +1,21 @@
 // src/app/api/courts/route.js
 import dbConnect from "../../../utils/db";
 import Court from "../../../models/Court";
-// import { messages } from "@cfworker/web";
 
 // Function to generate court letters
 const COURT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-// Randomly select an available court
-function selectAvailableCourt(existingReservedCourts) {
-  // Find courts that haven't been reserved
-  const availableCourts = COURT_LETTERS.filter(
-    court => !existingReservedCourts.includes(court)
-  );
-
-  // If no courts are available, return null
-  if (availableCourts.length === 0) {
+// Systematically select an available court based on reservedCourts
+function selectAvailableCourt(existingReservedCourts, reservedCourts) {
+  // Ensure the court letter corresponds to the current reservedCourts count
+  const court = COURT_LETTERS[reservedCourts];
+  
+  // Check if this court is already reserved
+  if (existingReservedCourts.includes(court)) {
     return null;
   }
 
-  // Randomly select from available courts
-  const randomIndex = Math.floor(Math.random() * availableCourts.length);
-  return availableCourts[randomIndex];
+  return court;
 }
 
 export async function GET(req) {
@@ -47,12 +42,6 @@ export async function GET(req) {
         { status: 200 }
       );
     }
-    // if (!record) {
-    //   return new Response(
-    //     JSON.stringify({error:"..."}),
-    //     { status: 408 }
-    //   );
-    // }
     
     if (!startDate || !endDate) {
       return new Response(
@@ -102,7 +91,7 @@ export async function POST(req) {
       court = new Court({
         date: new Date(date),
         timeSlot: timeSlot,
-        teams : new Map(),
+        teams: new Map(),
         reservedCourts: 0,
         totalCourts: 6,
         firstChoiceTeams: [],
@@ -119,12 +108,13 @@ export async function POST(req) {
       );
     }
     
-    // Randomly select an available court
+    // Systematically select an available court
     const assignedCourt = selectAvailableCourt(
       court.firstChoiceTeams.concat(
         court.secondChoiceTeams, 
         court.thirdChoiceTeams
-      )
+      ),
+      court.reservedCourts
     );
 
     // If no court is available, reject the registration
@@ -135,33 +125,7 @@ export async function POST(req) {
       );
     }
     
-    let venue = "";
-    switch (court.reservedCourts) {
-      case 0:
-        venue="A";
-        break;
-      case 1:
-        venue="B";
-        break;
-      case 2:
-        venue="C";
-        break;
-      case 3:
-        venue="D";
-        break;  
-      case 4:
-        venue="E";
-        break; 
-      case 5:
-        venue="F";
-        break;
-      default:
-        venue=""
-        break;
-    }
-
-    court.teams.set(teamId, venue);
-    // court.teams.set(teamId, 'A');
+    court.teams.set(teamId, assignedCourt);
     // Increment the reserved courts count
     court.reservedCourts += 1;
     
