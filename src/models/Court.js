@@ -35,7 +35,17 @@ const courtSchema = new mongoose.Schema({
       },
       message: props => `${props.value} is not a valid team-court assignment!`
     }
-  }]
+  }],
+  waitlistTeams: [{ 
+    type: String, 
+    validate: {
+      validator: function(v) {
+        return /^(.*?)(?:-[A-F])?$/.test(v);
+      },
+      message: props => `${props.value} 不是有效的候補隊伍!`
+    }
+  }],
+  waitlistLimit: { type: Number, default: 5 }
 });
 
 // Ensure unique index for date and time slot

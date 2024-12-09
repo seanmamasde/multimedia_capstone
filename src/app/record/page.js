@@ -1,4 +1,3 @@
-// src/app/record/page.js
 "use client";
 import React, { useState, useEffect } from "react";
 import AppMenubar from "../components/menubar";
@@ -11,15 +10,81 @@ export default function Record() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to format date to YYYY-MM-DD
   const formatDate = (dateString) => {
     if (!dateString) return "未提供";
     return new Date(dateString).toISOString().split('T')[0];
   };
 
-  const checkStatus = () => {
-    return "已登記";
+  const checkStatus = (isWaitlist) => {
+    return isWaitlist ? "候補中" : "已登記";
   }
+
+  const fetchUserRecords = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const payload = JSON.parse(decodeJwt(token));
+
+      // Fetch teams by username
+      const teamsResponse = await fetch(`/api/dbConnect/teamsByUname?uname=${payload.username}`);
+      if (!teamsResponse.ok) {
+        throw new Error("Failed to fetch teams");
+      }
+
+      const teamsData = await teamsResponse.json();
+
+      const courtsPromises = teamsData.map((team) =>
+        fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`).then((res) => res.json())
+      );
+
+      const courtsData = await Promise.all(courtsPromises);
+
+      // Combine and flatten team and court data
+      const formattedRecords = [];
+      teamsData.forEach((team, index) => {
+        const teamCourts = courtsData[index]; // Courts associated with this team
+        teamCourts.forEach((court) => {
+          const teams = court.teams;
+          const isWaitlisted = court.waitlistTeams.includes(team.id);
+
+          if (teams[team.id] || isWaitlisted) {
+            formattedRecords.push({
+              teamName: team.teamname,
+              teamId: team.id,
+              date: formatDate(court.date),
+              time: court.timeSlot,
+              status: checkStatus(isWaitlisted),
+              venue: isWaitlisted ? "候補中" : (teams[team.id] || "未提供"),
+              originalDate: court.date,
+              isWaitlisted: isWaitlisted
+            });
+          }
+        });
+      });
+
+      // Sort records by date in descending order (most recent first)
+      const sortedRecords = formattedRecords.sort((a, b) => {
+        return new Date(b.originalDate) - new Date(a.originalDate);
+      });
+
+      // Sort sorted records by team name
+      const finalRecords = sortedRecords.sort((a, b) => {
+        if (a.teamName < b.teamName) return -1;
+        if (a.teamName > b.teamName) return 1;
+        return 0;
+      });
+
+      setRecords(finalRecords);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleCancelRegistration = async (record) => {
     try {
@@ -29,8 +94,8 @@ export default function Record() {
         return;
       }
 
-      const response = await fetch('/api/courts/cancel', {
-        method: 'POST',
+      const response = await fetch('/api/courts', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -38,17 +103,13 @@ export default function Record() {
         body: JSON.stringify({
           date: record.originalDate,
           timeSlot: record.time,
-          teamId: record.teamId
+          cancelledTeamId: record.teamId
         })
       });
 
       if (response.ok) {
-        // Remove the cancelled record from the list
-        setRecords(records.filter(r => 
-          !(r.date === record.date && 
-            r.time === record.time && 
-            r.teamName === record.teamName)
-        ));
+        // 重新获取数据，而不是手动过滤记录
+        await fetchUserRecords();
         alert('取消登記成功');
       } else {
         const errorData = await response.json();
@@ -61,69 +122,6 @@ export default function Record() {
   };
 
   useEffect(() => {
-    const fetchUserRecords = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.push("/login");
-          return;
-        }
-
-        const payload = JSON.parse(decodeJwt(token));
-
-        // Fetch teams by username
-        const teamsResponse = await fetch(`/api/dbConnect/teamsByUname?uname=${payload.username}`);
-        if (!teamsResponse.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-
-        const teamsData = await teamsResponse.json();
-
-        // Fetch courts for each team
-        const courtsPromises = teamsData.map((team) =>
-          fetch(`/api/courts?teamId=${team.id}`).then((res) => res.json())
-        );
-
-        const courtsData = await Promise.all(courtsPromises);
-
-        // Combine and flatten team and court data
-        const formattedRecords = [];
-        teamsData.forEach((team, index) => {
-          const teamCourts = courtsData[index]; // Courts associated with this team
-          teamCourts.forEach((court) => {
-            const teams = court.teams;
-            formattedRecords.push({
-              teamName: team.teamname,
-              teamId: team.id,
-              date: formatDate(court.date),
-              time: court.timeSlot,
-              status: checkStatus(),
-              venue: teams[team.id] || "未提供",
-              originalDate: court.date // Keep original date for sorting
-            });
-          });
-        });
-
-        // Sort records by date in descending order (most recent first)
-        const sortedRecords = formattedRecords.sort((a, b) => {
-          return new Date(b.originalDate) - new Date(a.originalDate);
-        });
-
-        // Sort sorted records by team name
-        const finalRecords = sortedRecords.sort((a, b) => {
-          if (a.teamName < b.teamName) return -1;
-          if (a.teamName > b.teamName) return 1;
-          return 0;
-        });
-
-        setRecords(finalRecords);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
     fetchUserRecords();
   }, [router]);
 
@@ -155,7 +153,7 @@ export default function Record() {
               </tr>
             ) : (
               records.map((record, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+                <tr key={index} className={`hover:bg-gray-50 ${record.isWaitlisted ? 'bg-yellow-50' : ''}`}>
                   <td className="border p-2">{record.teamName}</td>
                   <td className="border p-2">{record.date}</td>
                   <td className="border p-2">{record.time}</td>

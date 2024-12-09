@@ -10,6 +10,7 @@ export default function Confirmation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teamDetails, setTeamDetails] = useState(null);
   const [assignedCourt, setAssignedCourt] = useState(null);
+  const [waitlistPosition, setWaitlistPosition] = useState(null);
 
   const teamId = searchParams.get('team');
   const timeSlot = searchParams.get('time');
@@ -49,10 +50,13 @@ export default function Confirmation() {
       });
 
       const result = await response.json();
-
-      if (response.ok) {
+      if (response.status === 200) {
         setAssignedCourt(result.assignedCourt);
         alert(`登記成功！已分配場地：${result.assignedCourt}`);
+        router.push('/play/register');
+      } else if (response.status === 202) {
+        setWaitlistPosition(result.waitlistPosition);
+        alert(`已加入候補名單！目前候補順位：${result.waitlistPosition}`);
         router.push('/play/register');
       } else {
         alert(`登記失敗: ${result.message}`);
@@ -101,10 +105,17 @@ export default function Confirmation() {
                 ))}
               </ul>
             </div>
+            
+            {waitlistPosition && (
+              <div className="bg-yellow-100 p-3 rounded">
+                <p className="font-medium text-yellow-700">
+                  候補狀態：目前候補順位 {waitlistPosition}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex gap-4">
-            {/* 確認登記按鈕 */}
             <button
               onClick={handleConfirm}
               disabled={isSubmitting}
@@ -116,7 +127,6 @@ export default function Confirmation() {
               {isSubmitting ? '處理中...' : '確認登記'}
             </button>
             
-            {/* 返回按鈕 */}
             <button
               onClick={() => router.back()}
               disabled={isSubmitting}
