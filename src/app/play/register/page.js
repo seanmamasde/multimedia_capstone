@@ -7,17 +7,43 @@ import { Dropdown } from "primereact/dropdown";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import AppMenubar from "../../components/menubar";
+import { decodeJwt } from "@/utils/jwtAuth";
 import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primeicons/primeicons.css";
 
-export default function Register() {
+export default function CourtRegistration() {
+  const router = useRouter();
   const [days, setDays] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [courtData, setCourtData] = useState({});
-  const router = useRouter();
+  
+  // Team selection states
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [teamDetails, setTeamDetails] = useState(null);
+  const [username, setUsername] = useState(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
 
+  // Authentication and initial data fetching
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(decodeJwt(token));
+      setUsername(payload.username);
+      fetchUserTeams(payload.username);
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      localStorage.removeItem("token");
+      router.push("/login");
+    }
+
+    // Generate next 7 days
     const today = new Date();
     const generatedDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
@@ -32,6 +58,18 @@ export default function Register() {
     fetchCourtData(generatedDays[0], generatedDays[generatedDays.length - 1]);
   }, []);
 
+  // Fetch teams for the current user
+  const fetchUserTeams = async (uname) => {
+    try {
+      const response = await fetch(`/api/dbConnect/teamsByUname?uname=${uname}`);
+      const data = await response.json();
+      setTeams(data);
+    } catch (error) {
+      console.error("獲取隊伍資料錯誤:", error);
+    }
+  };
+
+  // Fetch court availability data
   const fetchCourtData = async (startDate, endDate) => {
     try {
       const response = await fetch(
@@ -56,6 +94,22 @@ export default function Register() {
     }
   };
 
+  // Fetch specific team details
+  const fetchTeamDetails = async (teamId) => {
+    try {
+      const response = await fetch(`/api/dbConnect/teamByTid?tid=${teamId}`);
+      if (response.ok) {
+        const teamData = await response.json();
+        setTeamDetails(teamData);
+      } else {
+        console.error("無法獲取隊伍資料");
+      }
+    } catch (error) {
+      console.error("請求錯誤：", error);
+    }
+  };
+
+  // Color coding for court availability
   const getColorForTimeSlot = (date, timeSlot) => {
     const courtInfo = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
     if (!courtInfo) return "white";
@@ -68,8 +122,33 @@ export default function Register() {
     return "white";
   };
 
-  const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i);
+  // Event Handlers
+  const handleTeamSelection = (e) => {
+    const teamId = e.target.value;
+    setSelectedTeam(teamId);
+    if (teamId) {
+      fetchTeamDetails(teamId);
+    } else {
+      setTeamDetails(null);
+    }
+  };
 
+  const handleTimeSlotSelection = (e) => {
+    setSelectedTimeSlot(e.target.value);
+  };
+
+  const handleConfirmRegistration = () => {
+    if (!selectedTeam || !selectedTimeSlot) {
+      alert("請選擇隊伍和時間段！");
+      return;
+    }
+    
+    // Add the date to the confirmation URL
+    router.push(`/play/register/confirmation?team=${selectedTeam}&time=${selectedTimeSlot}&date=${selectedDate}`);
+  };
+
+  // Prepare data for court availability table
+  const timeSlots = Array.from({ length: 15 }, (_, i) => 8 + i);
   const transposedData = timeSlots.map((hour) => {
     const rowData = { time: `${hour}:00` };
     days.forEach((day) => {
@@ -78,25 +157,23 @@ export default function Register() {
     return rowData;
   });
 
-  const handleRegister = () => {
-    router.push(`/play/register/team_time?date=${selectedDate}`);
-  };
-
   return (
     <div
       style={{
         margin: 0,
         padding: 0,
         height: "100vh",
-        overflow: "hidden", // Disable page scrolling
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
     >
       <AppMenubar />
-      <div style={{ flex: 1, overflow: "auto", paddingTop: "40px" }}> {/* Reduced paddingTop */}
-        {days.length > 0 ? (
-          <div style={{ paddingBottom: "80px" }}>
+      <div style={{ flex: 1, display: 'flex', overflow: "hidden" }}>
+        {/* Left Side: Court Availability */}
+        <div style={{ width: '60%', overflow: 'auto', padding: '20px' }}>
+          <h2 className="text-2xl font-bold mb-4">場地登記情況</h2>
+          {days.length > 0 ? (
             <DataTable
               value={transposedData}
               scrollable
@@ -109,7 +186,6 @@ export default function Register() {
                 padding: 0,
               }}
             >
-              {/* Frozen Column (First Column) */}
               <Column
                 field="time"
                 header="時間"
@@ -120,7 +196,6 @@ export default function Register() {
                 }}
                 frozen
               />
-              {/* Dynamic Columns for Dates */}
               {days.map((day) => (
                 <Column
                   key={day}
@@ -141,42 +216,87 @@ export default function Register() {
                 />
               ))}
             </DataTable>
+          ) : (
+            <p style={{ textAlign: "center" }}>載入中...</p>
+          )}
+        </div>
+
+        {/* Right Side: Team and Time Selection */}
+        <div style={{ width: '40%', padding: '20px', overflowY: 'auto', backgroundColor: '#f9f9f9' }}>
+          <h2 className="text-2xl font-bold mb-6">選擇隊伍與時段</h2>
+          <div className="mb-6">
+            <label htmlFor="dateSelect" className="block mb-2 font-semibold">登記日期:</label>
+            <Dropdown
+              id="dateSelect"
+              value={selectedDate}
+              options={days.map((day) => ({ label: day, value: day }))}
+              onChange={(e) => setSelectedDate(e.value)}
+              className="w-full"
+            />
           </div>
-        ) : (
-          <p style={{ textAlign: "center" }}>載入中...</p>
-        )}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "20px",
-          height: "80px",
-          borderTop: "1px solid #ddd",
-          padding: "10px",
-          backgroundColor: "white",
-          position: "sticky",
-          bottom: 0,
-          zIndex: 10
-        }}
-      >
-        <Dropdown
-          value={selectedDate}
-          options={days.map((day) => ({ label: day, value: day }))}
-          onChange={(e) => setSelectedDate(e.value)}
-          placeholder="選擇日期"
-          style={{
-            width: "150px",
-            marginRight: "10px"
-          }}
-        />
-        <Button
-          label="開始登記"
-          className="p-button-primary"
-          onClick={handleRegister}
-          style={{ width: "100px" }}
-        />
+
+          {/* Team Selection */}
+          <div className="mb-6">
+            <label htmlFor="teamSelect" className="block mb-2 font-semibold">選擇隊伍:</label>
+            <select 
+              id="teamSelect" 
+              value={selectedTeam} 
+              onChange={handleTeamSelection}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">請選擇隊伍</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.teamname}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Display selected team details */}
+          {teamDetails && (
+            <div className="mb-6 p-4 bg-gray-50 rounded">
+              <h3 className="font-semibold mb-2">隊伍詳情</h3>
+              <p>隊伍名稱: {teamDetails.teamname}</p>
+              <p>成員數量: {teamDetails.memberNum}</p>
+              <div className="mt-2">
+                <p>成員列表:</p>
+                <ul className="list-disc pl-5">
+                  {Array.from({ length: teamDetails.memberNum }).map((_, idx) => (
+                    <li key={idx}>
+                      成員 {idx + 1}: {teamDetails[`uname${idx + 1}`]}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Time Slot Selection */}
+          <div className="mb-6">
+            <label htmlFor="timeSlotSelect" className="block mb-2 font-semibold">選擇時間段:</label>
+            <select
+              id="timeSlotSelect"
+              value={selectedTimeSlot}
+              onChange={handleTimeSlotSelection}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">請選擇時間段</option>
+              {Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`).map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Confirm Button */}
+          <Button
+            label="確認登記"
+            className="p-button-primary w-full"
+            onClick={handleConfirmRegistration}
+          />
+        </div>
       </div>
     </div>
   );
