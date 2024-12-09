@@ -19,8 +19,8 @@ export async function POST(req) {
 
     // Create the new user
     const newUser = new User({
-      username,
       email,
+      username,
       password: hashedPassword,
     });
 
