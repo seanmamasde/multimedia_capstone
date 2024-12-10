@@ -132,6 +132,7 @@ export default function Team() {
           value={teams}
           className="teams-table"
           stripedRows
+          emptyMessage="沒有隊伍"
           tableStyle={{ minWidth: "50rem" }}
           footer={renderFooter()} // Provide a footer as a div
         >
