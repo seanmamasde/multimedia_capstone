@@ -188,6 +188,16 @@ async function drawAndAddToCourts()
     if (!shiftReservations)
         process.exit();
 
+    let second_day = new Date(startDate);
+    second_day.setDate(second_day.getDate() + 1);
+
+    let newer_dates = await Reservation.find(({
+        date: {
+          $gte: second_day.toISOString(),
+          $lte: endDateISO,
+        }
+    }))
+
     // delete old reservation
     result = await Reservation.deleteMany({
         date: {
@@ -197,8 +207,6 @@ async function drawAndAddToCourts()
     })
 
     console.log(`Deleted ${result.deletedCount} from reservation`);
-
-    let newer_dates = reservations_in_range.filter(r => r.date.toISOString() != startDateISO);
 
     newer_dates.forEach((c) => {
         c.date = moveISO(c.date, -1);
