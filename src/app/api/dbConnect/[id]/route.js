@@ -4,6 +4,7 @@ import dbConnect from "../../../../utils/db.js";
 import Teams from "../../../../models/Teams.js";
 import User from "../../../../models/User.js";
 import promptSync from "prompt-sync";
+import { Reservation } from "@/models/Reservation.js";
 
 // Load environment variables
 dotenv.config();
@@ -47,15 +48,36 @@ export async function GET(request, { params }) {
 
         console.log(specifiedTeam);
 
-        return new Response(JSON.stringify(specifiedTeam[0]), {
-          status: 200,
-        });
+          return new Response(JSON.stringify(specifiedTeam[0]), {
+            status: 200,
+          });
+        }
+        case "getReservation": {
+          const startDate = new Date(queryParams.get("startDate"));
+          const endDate = new Date(queryParams.get("endDate"));
+          
+          // Remove teamId check since we're just fetching available courts
+          if (!startDate || !endDate) {
+            return new Response(
+              JSON.stringify({ error: "開始日期或結束日期缺失" }),
+              { status: 400 }
+            );
+          }
+      
+          const reservations = await Reservation.find({
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          });
+          console.log(reservations);
+          return new Response(JSON.stringify(reservations), { status: 200 });
+        }
+        default:
+          return new Response('Invalid GET ID', { status: 404 });
       }
-      default:
-        return new Response('Invalid GET ID', { status: 404 });
-    }
-  } catch (error) {
-    console.log(error);
+    } catch(error) {
+      console.log(error);
 
     return new Response(error, {
       status: 500,

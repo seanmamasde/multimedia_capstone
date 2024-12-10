@@ -12,6 +12,7 @@ import "primereact/resources/themes/saga-blue/theme.css";
 import "primeicons/primeicons.css";
 
 export default function Reserve() {
+  const max_courts = 6.0;
   const [days, setDays] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [courtData, setCourtData] = useState({});
@@ -35,7 +36,7 @@ export default function Reserve() {
   const fetchCourtData = async (startDate, endDate) => {
     try {
       const response = await fetch(
-        `/api/reserve_courts?startDate=${startDate}&endDate=${endDate}`
+        `/api/dbConnect/getReservation?startDate=${startDate}&endDate=${endDate}`
       );
   
       if (!response.ok) {
@@ -46,21 +47,21 @@ export default function Reserve() {
   
       // 只處理第一志願
       const transformed = {};
-      data.forEach((court) => {
-        const dateKey = new Date(court.date).toISOString().split("T")[0];
+
+      data.forEach((reservation) => {
+        const dateKey = new Date(reservation.date).toISOString().split("T")[0];
         if (!transformed[dateKey]) {
           transformed[dateKey] = {};
         }
   
-        // 填入第一志願的資訊
-        if (court.firstChoiceTeams && court.firstChoiceTeams.length > 0) {
-          transformed[dateKey][court.timeSlot] = {
-            reserved: court.reservedCourts,
-            total: court.totalCourts,
-            firstChoiceTeams: court.firstChoiceTeams,
-          };
-        }
+        // increment slot of first preference by one
+        if (!transformed[dateKey][reservation.preferences.first])
+          transformed[dateKey][reservation.preferences.first] = 1;
+        else
+          transformed[dateKey][reservation.preferences.first]++;
       });
+
+      console.log(transformed);
   
       setCourtData(transformed);
     } catch (error) {
@@ -69,10 +70,10 @@ export default function Reserve() {
   };
   
   const getColorForTimeSlot = (date, timeSlot) => {
-    const courtInfo = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
-    if (!courtInfo) return "white";
+    const courts = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
+    if (!courts) return "white";
 
-    const occupancyRate = (courtInfo.reserved / courtInfo.total) * 100;
+    const occupancyRate = courts / max_courts;
 
     // // 判斷是否為該日期的第一志願
     // const isTopChoice = Object.values(courtData[date] || {}).reduce((maxRate, info) => {
@@ -81,8 +82,8 @@ export default function Reserve() {
     // }, 0) === occupancyRate;
 
     // if (isTopChoice) return "#FFD700"; // 金色表示第一志願
-    if (occupancyRate === 100) return "#FF0000";
-    if (occupancyRate >= 50) return "#006400";
+    if (occupancyRate >= 1) return "#FF0000";
+    if (occupancyRate >= 0.5) return "#006400";
     if (occupancyRate > 0) return "#90EE90";
     return "white";
   };
