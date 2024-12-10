@@ -12,7 +12,7 @@
     ```
 3. Create a `.env` file at the same level as the `src` folder
    ```bash
-   $ echo "MONGODB_URI=mongodb://localhost:27017/badminton_court_reserver" > .env
+   $ echo "MONGODB_URI=mongodb://localhost:27017/badminton-db" > .env
    ```
 4. Run the project
     ```bash
