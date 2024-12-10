@@ -9,59 +9,59 @@ import promptSync from "prompt-sync";
 dotenv.config();
 
 export async function GET(request, { params }) {
-    try {
-      const { id } = await params;
-      console.log(id);
-      await dbConnect();
-      const queryParams = new URLSearchParams(request.url.split('?')[1]);
+  try {
+    const { id } = await params;
+    console.log(id);
+    await dbConnect();
+    const queryParams = new URLSearchParams(request.url.split('?')[1]);
 
-      switch (id) {
-        case "teamsByUname": {
-          const uname = queryParams.get("uname");
-          console.log(uname);
+    switch (id) {
+      case "teamsByUname": {
+        const uname = queryParams.get("uname");
+        console.log(uname);
 
-          const allTeams = await Teams.find({
-                            $or: [
-                                { uname1: uname },
-                                { uname2: uname },
-                                { uname3: uname },
-                                { uname4: uname }
-                              ]
-                          })
-                          .catch(err => {
-                            console.error(err);
-                          });
-
-          return new Response(JSON.stringify(allTeams), {
-              status: 200,
+        const allTeams = await Teams.find({
+          $or: [
+            { uname1: uname },
+            { uname2: uname },
+            { uname3: uname },
+            { uname4: uname }
+          ]
+        })
+          .catch(err => {
+            console.error(err);
           });
-        }
-        case "teamByTid": {
-          const tid = queryParams.get("tid");
-          console.log(tid);
 
-          const specifiedTeam = await Teams.find({ id: tid })
-                                      .catch(err => {
-                                        console.error(err);
-                                      });
-
-          console.log(specifiedTeam);
-
-          return new Response(JSON.stringify(specifiedTeam[0]), {
-            status: 200,
-          });
-        }
-        default:
-          return new Response('Invalid GET ID', { status: 404 });
+        return new Response(JSON.stringify(allTeams), {
+          status: 200,
+        });
       }
-    } catch(error) {
-      console.log(error);
+      case "teamByTid": {
+        const tid = queryParams.get("tid");
+        console.log(tid);
 
-      return new Response(error, {
-          status: 500,
-      });
+        const specifiedTeam = await Teams.find({ id: tid })
+          .catch(err => {
+            console.error(err);
+          });
+
+        console.log(specifiedTeam);
+
+        return new Response(JSON.stringify(specifiedTeam[0]), {
+          status: 200,
+        });
+      }
+      default:
+        return new Response('Invalid GET ID', { status: 404 });
     }
-}   
+  } catch (error) {
+    console.log(error);
+
+    return new Response(error, {
+      status: 500,
+    });
+  }
+}
 
 export async function POST(request, { params }) {
   try {
@@ -100,16 +100,16 @@ export async function POST(request, { params }) {
       case "editTeam": {
         // needs encryption
         const { team } = await request.json();
-        const id = team.id;
+        const { id, ...updateData } = team;
 
         const updated = await Teams.findOneAndUpdate(
           { id },
-          { ...team },
+          updateData,
           { new: true, upsert: false }
         );
 
         if (updated) {
-          return new Response("Successfuly updated entry", { status: 200 });
+          return new Response("Successfully updated entry", { status: 200 });
         } else {
           return new Response("Unable to find targeted team", { status: 500 });
         }
@@ -117,11 +117,11 @@ export async function POST(request, { params }) {
       case "deleteTeam": {
         // this is unsecure af rn
         const { tid } = await request.json();
-        
-        await Teams.deleteOne({ id : tid }).catch(err => {
-                                        console.error(err);
-                                      });
-        
+
+        await Teams.deleteOne({ id: tid }).catch(err => {
+          console.error(err);
+        });
+
         return new Response("delete success.", { status: 200 });
       }
       default:

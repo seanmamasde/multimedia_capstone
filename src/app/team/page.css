@@ -37,9 +37,9 @@
 }
 
 .footer-container {
-  display: flex; /* Enable flexbox */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
   margin-top: -5px;
   margin-bottom: -5px;
 }
@@ -50,4 +50,20 @@
   color: #1f2937;
   margin-bottom: 32px;
   text-align: center;
+}
+
+.team-edit-field {
+  margin-bottom: 15px;
+}
+
+.team-edit-field label {
+  display: inline-block;
+  width: 100px;
+  font-weight: bold;
+}
+
+.team-edit-field input,
+.team-edit-field select {
+  width: calc(100% - 110px);
+  padding: 5px;
 }
