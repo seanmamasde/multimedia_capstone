@@ -225,7 +225,7 @@ export default function CourtRegistration() {
         <div style={{ width: '40%', padding: '20px', overflowY: 'auto', backgroundColor: '#f9f9f9' }}>
           <h2 className="text-2xl font-bold mb-6">選擇隊伍與時段</h2>
           <div className="mb-6">
-            <label htmlFor="dateSelect" className="block mb-2 font-semibold">登記日期:</label>
+            <label htmlFor="dateSelect" className="block mb-2 font-semibold">選擇日期:</label>
             <Dropdown
               id="dateSelect"
               value={selectedDate}
@@ -274,14 +274,14 @@ export default function CourtRegistration() {
 
           {/* Time Slot Selection */}
           <div className="mb-6">
-            <label htmlFor="timeSlotSelect" className="block mb-2 font-semibold">選擇時間段:</label>
+            <label htmlFor="timeSlotSelect" className="block mb-2 font-semibold">選擇時段:</label>
             <select
               id="timeSlotSelect"
               value={selectedTimeSlot}
               onChange={handleTimeSlotSelection}
               className="w-full p-2 border rounded"
             >
-              <option value="">請選擇時間段</option>
+              <option value="">請選擇時段</option>
               {Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`).map((slot) => (
                 <option key={slot} value={slot}>
                   {slot}
@@ -292,7 +292,7 @@ export default function CourtRegistration() {
 
           {/* Confirm Button */}
           <Button
-            label="確認登記"
+            label="開始登記"
             className="p-button-primary w-full"
             onClick={handleConfirmRegistration}
           />

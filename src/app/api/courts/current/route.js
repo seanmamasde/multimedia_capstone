@@ -8,23 +8,18 @@ export async function GET(req) {
   
       const currentTime = new Date();
       const currentHour = currentTime.getHours();
+      
   
       // 設定查詢的時間範圍
       const startTime = new Date();
       startTime.setHours(8, 0, 0, 0); // 當天 8:00 開始
       const endTime = new Date();
       endTime.setHours(22, 0, 0, 0); // 當天 22:00 結束
-  
-    //   if (currentHour >= 8 && currentHour <= 22) {
-    //     console.log('現在是有效的場地使用時段');
-    //   } else {
-    //     console.log('現在超出有效時段');
-    //   }
-    
+
       if (currentHour > 22) {
         return new Response(
-          JSON.stringify({ message: "無需查詢，時間超過 23:00" }),
-          { status: 200 }
+          JSON.stringify({ message: "無需查詢，球場已關閉" }),
+          { status: 202 }
         );
       }
       let searchHour=currentHour;
