@@ -66,16 +66,15 @@ export default function Record() {
         });
       });
 
-      // Sort records by date in descending order (most recent first)
-      const sortedRecords = formattedRecords.sort((a, b) => {
-        return new Date(b.originalDate) - new Date(a.originalDate);
-      });
-
       // Sort sorted records by team name
-      const finalRecords = sortedRecords.sort((a, b) => {
+      const sortedRecords = formattedRecords.sort((a, b) => {
         if (a.teamName < b.teamName) return -1;
         if (a.teamName > b.teamName) return 1;
         return 0;
+      });
+
+      const finalRecords = sortedRecords.sort((a, b) => {
+        return new Date(a.originalDate) - new Date(b.originalDate);
       });
 
       setRecords(finalRecords);
@@ -108,7 +107,6 @@ export default function Record() {
       });
 
       if (response.ok) {
-        // 重新获取数据，而不是手动过滤记录
         await fetchUserRecords();
         alert('取消登記成功');
       } else {

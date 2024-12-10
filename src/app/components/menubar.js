@@ -94,8 +94,8 @@ export default function AppMenubar() {
 
   const avatarMenuItems = [
     { label: "Profile", icon: "pi pi-user", command: () => router.push("/profile") },
-    { label: "Settings", icon: "pi pi-cog", command: () => router.push("/settings") },
-    { label: "登出", icon: "pi pi-sign-out", command: handleLogout },
+    // { label: "Settings", icon: "pi pi-cog", command: () => router.push("/settings") },
+    { label: "Logout", icon: "pi pi-sign-out", command: handleLogout },
   ];
 
   const start = (
