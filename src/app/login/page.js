@@ -76,6 +76,8 @@ export default function LoginPage() {
                 toggleMask
                 feedback={false}
                 required
+                className="w-full"
+                pt={{ iconField: { root: { className: 'w-full' } } }}
               />
             </span>
           </div>
@@ -85,6 +87,7 @@ export default function LoginPage() {
                 inputId="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.checked)}
+                style={{ marginRight: "0.5rem" }}
               />
               <label htmlFor="rememberMe">記住我</label>
             </div>
