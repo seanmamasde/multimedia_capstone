@@ -80,28 +80,28 @@ export async function POST(req) {
     await reservation.save();
 
     // 更新 Court 的選擇欄位
-    const timeSlots = { first, second, third };
-    for (const [priority, timeSlot] of Object.entries(timeSlots)) {
-      if (!timeSlot) continue;
+    // const timeSlots = { first, second, third };
+    // for (const [priority, timeSlot] of Object.entries(timeSlots)) {
+    //   if (!timeSlot) continue;
 
-      const court = await Court.findOneAndUpdate(
-        { date: new Date(date), timeSlot },
-        { $setOnInsert: { totalCourts: 6, reservedCourts: 0 } },
-        { upsert: true, new: true }
-      );
+    //   const court = await Court.findOneAndUpdate(
+    //     { date: new Date(date), timeSlot },
+    //     { $setOnInsert: { totalCourts: 6, reservedCourts: 0 } },
+    //     { upsert: true, new: true }
+    //   );
 
-      // 將 teamId 加入對應的志願欄位
-      const choiceField = `${priority}ChoiceTeams`;
-      if (!court[choiceField]) {
-        court[choiceField] = [];
-      }
-      if (!court[choiceField].includes(teamId)) {
-        court[choiceField].push(teamId);
-      }
+    //   // 將 teamId 加入對應的志願欄位
+    //   const choiceField = `${priority}ChoiceTeams`;
+    //   if (!court[choiceField]) {
+    //     court[choiceField] = [];
+    //   }
+    //   if (!court[choiceField].includes(teamId)) {
+    //     court[choiceField].push(teamId);
+    //   }
       
-      court.reservedCourts += 1;
-      await court.save();
-    }
+    //   court.reservedCourts += 1;
+    //   await court.save();
+    // }
 
     return new Response(
       JSON.stringify({
