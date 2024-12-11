@@ -357,15 +357,15 @@ export default function RecordPage() {
           <Column
             field="teamName"
             header="隊伍名稱"
-            filter
-            filterPlaceholder="搜尋"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
             sortable
           ></Column>
           <Column
             field="date"
             header="日期"
-            filter
-            filterPlaceholder="搜尋"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
             sortable
           ></Column>
           <Column
@@ -373,6 +373,7 @@ export default function RecordPage() {
             header="時間"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             field="status"
@@ -381,12 +382,14 @@ export default function RecordPage() {
             filterPlaceholder="搜尋"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             field="venue"
             header="場地"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             body={actionTemplate}
