@@ -22,9 +22,9 @@ export default function RecordPage() {
     sortField: null,
     sortOrder: null,
     filters: {
-      'teamName': { value: null, matchMode: 'contains' },
-      'date': { value: null, matchMode: 'contains' }
-    }
+      teamName: { value: null, matchMode: "contains" },
+      date: { value: null, matchMode: "contains" },
+    },
   });
 
   const totalRecords = records.length;
@@ -34,80 +34,10 @@ export default function RecordPage() {
     return new Date(dateString).toISOString().split("T")[0];
   };
 
-  const checkStatus = (isWaitlist) => {
+  const checkStatus = (isWaitlist, isExpired) => {
+    if (isExpired) return "已結束";
     return isWaitlist ? "候補中" : "已登記";
   };
-
-  // const fetchUserRecords = async () => {
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //       router.push("/login");
-  //       return;
-  //     }
-
-  //     const payload = JSON.parse(decodeJwt(token));
-
-  //     // Fetch teams by username
-  //     const teamsResponse = await fetch(
-  //       `/api/dbConnect/teamsByUname?uname=${payload.username}`
-  //     );
-  //     if (!teamsResponse.ok) {
-  //       throw new Error("Failed to fetch teams");
-  //     }
-
-  //     const teamsData = await teamsResponse.json();
-
-  //     const courtsPromises = teamsData.map((team) =>
-  //       fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`).then((res) =>
-  //         res.json()
-  //       )
-  //     );
-
-  //     const courtsData = await Promise.all(courtsPromises);
-
-  //     // Combine and flatten team and court data
-  //     const formattedRecords = [];
-  //     teamsData.forEach((team, index) => {
-  //       const teamCourts = courtsData[index]; // Courts associated with this team
-  //       teamCourts.forEach((court) => {
-  //         const teams = court.teams;
-  //         const isWaitlisted = (court.waitlistTeams || []).includes(team.id);
-
-  //         if (teams[team.id] || isWaitlisted) {
-  //           formattedRecords.push({
-  //             id: `${team.id}-${court.date}-${court.timeSlot}`,
-  //             teamName: team.teamname,
-  //             teamId: team.id,
-  //             date: formatDate(court.date),
-  //             time: court.timeSlot,
-  //             status: checkStatus(isWaitlisted),
-  //             venue: isWaitlisted ? "候補中" : teams[team.id] || "未提供",
-  //             originalDate: court.date,
-  //             isWaitlisted: isWaitlisted
-  //           });
-  //         }
-  //       });
-  //     });
-
-  //     // Sort sorted records by team name
-  //     const sortedRecords = formattedRecords.sort((a, b) => {
-  //       if (a.teamName < b.teamName) return -1;
-  //       if (a.teamName > b.teamName) return 1;
-  //       return 0;
-  //     });
-
-  //     const finalRecords = sortedRecords.sort((a, b) => {
-  //       return new Date(a.originalDate) - new Date(b.originalDate);
-  //     });
-
-  //     setRecords(finalRecords);
-  //     setLoading(false);
-  //   } catch (err) {
-  //     setError(err.message);
-  //     setLoading(false);
-  //   }
-  // };
 
   const fetchUserRecords = async () => {
     try {
@@ -116,9 +46,9 @@ export default function RecordPage() {
         router.push("/login");
         return;
       }
-  
+
       const payload = JSON.parse(decodeJwt(token));
-  
+
       // Fetch teams by username
       const teamsResponse = await fetch(
         `/api/dbConnect/teamsByUname?uname=${payload.username}`
@@ -126,40 +56,35 @@ export default function RecordPage() {
       if (!teamsResponse.ok) {
         throw new Error("Failed to fetch teams");
       }
-  
+
       const teamsData = await teamsResponse.json();
-  
+
       // Get current time for filtering
       const currentTime = new Date();
-  
+
       const courtsPromises = teamsData.map((team) =>
         fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`)
           .then((res) => res.json())
           .then((courts) => {
-            const filteredCourts = courts.filter((court) => {
+            return courts.map((court) => {
               const courtDate = new Date(court.date);
               const courtEndTime = new Date(
                 courtDate.toISOString().split("T")[0] + " " + court.timeSlot
               );
-              return courtEndTime >= currentTime; // 保留未過期紀錄
+
+              // Extend expiration time by 1 hour
+              const extendedEndTime = new Date(courtEndTime.getTime() + 60 * 60 * 1000);
+
+              return {
+                ...court,
+                isExpired: extendedEndTime < currentTime, // Check if expired
+              };
             });
-      
-            // 測試過濾效果：打印被過濾掉的紀錄
-            // const expiredCourts = courts.filter((court) => {
-            //   const courtDate = new Date(court.date);
-            //   const courtEndTime = new Date(
-            //     courtDate.toISOString().split("T")[0] + " " + court.timeSlot
-            //   );
-            //   return courtEndTime < currentTime; // 過濾過期的紀錄
-            // });
-            // console.log("Expired records for team:", team.id, expiredCourts);
-      
-            return filteredCourts;
           })
       );
-  
+
       const courtsData = await Promise.all(courtsPromises);
-  
+
       // Combine and flatten team and court data
       const formattedRecords = [];
       teamsData.forEach((team, index) => {
@@ -167,7 +92,7 @@ export default function RecordPage() {
         teamCourts.forEach((court) => {
           const teams = court.teams;
           const isWaitlisted = (court.waitlistTeams || []).includes(team.id);
-  
+
           if (teams[team.id] || isWaitlisted) {
             formattedRecords.push({
               id: `${team.id}-${court.date}-${court.timeSlot}`,
@@ -175,26 +100,27 @@ export default function RecordPage() {
               teamId: team.id,
               date: formatDate(court.date),
               time: court.timeSlot,
-              status: checkStatus(isWaitlisted),
+              status: checkStatus(isWaitlisted, court.isExpired),
               venue: isWaitlisted ? "候補中" : teams[team.id] || "未提供",
               originalDate: court.date,
               isWaitlisted: isWaitlisted,
+              isExpired: court.isExpired,
             });
           }
         });
       });
-  
+
       // Sort records by team name and date
       const sortedRecords = formattedRecords.sort((a, b) => {
         if (a.teamName < b.teamName) return -1;
         if (a.teamName > b.teamName) return 1;
         return 0;
       });
-  
+
       const finalRecords = sortedRecords.sort((a, b) => {
         return new Date(a.originalDate) - new Date(b.originalDate);
       });
-  
+
       setRecords(finalRecords);
       setLoading(false);
     } catch (err) {
@@ -237,7 +163,6 @@ export default function RecordPage() {
     }
   };
 
-  // Lazy load simulation (filter, sort, and paginate on client side)
   const getFilteredAndSortedRecords = () => {
     let filtered = [...records];
 
@@ -308,6 +233,7 @@ export default function RecordPage() {
         label="取消登記"
         className="p-button-danger"
         onClick={() => handleCancelRegistration(rowData)}
+        disabled={rowData.isExpired}
       />
     );
   };
@@ -352,10 +278,30 @@ export default function RecordPage() {
             filterPlaceholder="搜尋"
             sortable
           ></Column>
-          <Column field="time" header="時間" alignHeader="center" style={{ textAlign: "center", width: '5rem' }}></Column>
-          <Column field="status" header="狀態" alignHeader="center" style={{ textAlign: "center", width: '5rem' }}></Column>
-          <Column field="venue" header="場地" alignHeader="center" style={{ textAlign: "center", width: '5rem' }}></Column>
-          <Column body={actionTemplate} header="操作" alignHeader="center" style={{ textAlign: "center", width: '10rem' }}></Column>
+          <Column
+            field="time"
+            header="時間"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
+          ></Column>
+          <Column
+            field="status"
+            header="狀態"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
+          ></Column>
+          <Column
+            field="venue"
+            header="場地"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
+          ></Column>
+          <Column
+            body={actionTemplate}
+            header="操作"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "10rem" }}
+          ></Column>
         </DataTable>
       </div>
     </div>
