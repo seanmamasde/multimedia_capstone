@@ -24,8 +24,6 @@ export default function Home() {
       try {
         const response = await fetch("/api/courts/current");
         const data = await response.json();
-        console.log(response.status);
-        console.log(data);
         if (response.status === 200) {
           // 初始化場地分布
           const courts = { A: [], B: [], C: [], D: [], E: [], F: [] };

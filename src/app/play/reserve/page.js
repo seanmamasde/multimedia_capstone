@@ -12,8 +12,8 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primeicons/primeicons.css";
 
-export default function CombinedReservation() {
-  const max_courts = 6.0;
+export default function CourtReservation() {
+  const max_courts = 60.0;
   const [days, setDays] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [courtData, setCourtData] = useState({});
@@ -130,9 +130,9 @@ export default function CombinedReservation() {
 
     const occupancyRate = courts / max_courts;
 
-    if (occupancyRate >= 1) return "#FF0000";
-    if (occupancyRate >= 0.5) return "#006400";
-    if (occupancyRate > 0) return "#90EE90";
+    if (courts >= 30) return "#FF0000";
+    if (courts >= 6) return "#006400";
+    if (courts >= 1) return "#90EE90";
     return "white";
   };
 
