@@ -4,10 +4,22 @@
   overflow-y: auto;
 }
 
+/* Fixed menubar at the top */
+.menubar-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: #ffffff;
+}
+
+/* Content wrapper with dynamic offset */
 .content-wrapper {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 16px 24px;
+  margin-top: calc(60px + var(--scroll-offset, 0px)); /* Adds dynamic offset */
 }
 
 .title {

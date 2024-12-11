@@ -98,7 +98,9 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      <AppMenubar />
+      <div className="menubar-wrapper">
+        <AppMenubar />
+      </div>
       <div className="content-wrapper">
         <h1 className="title">使用注意事項</h1>
         <div className="rules-grid">
@@ -128,7 +130,7 @@ export default function Home() {
           ))}
         </div>
 
-        
+
         <h2 className="title">當前場地使用情形</h2>
         {loading ? (
           <p>載入中...</p>
