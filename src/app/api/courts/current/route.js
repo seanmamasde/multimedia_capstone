@@ -1,58 +1,81 @@
-// src/app/api/courts/current/route.js
 import dbConnect from "../../../../utils/db";
 import Court from "../../../../models/Court";
+import Teams from "../../../../models/Teams";
 
 export async function GET(req) {
     try {
-      await dbConnect();
-  
-      const currentTime = new Date();
-      const currentHour = currentTime.getHours();
-      
-  
-      // 設定查詢的時間範圍
-      const startTime = new Date();
-      startTime.setHours(8, 0, 0, 0); // 當天 8:00 開始
-      const endTime = new Date();
-      endTime.setHours(22, 0, 0, 0); // 當天 22:00 結束
+        await dbConnect();
 
-      if (currentHour > 22) {
-        return new Response(
-          JSON.stringify({ message: "無需查詢，球場已關閉" }),
-          { status: 202 }
-        );
-      }
-      let searchHour=currentHour;
-      if(currentHour<8){
-        searchHour=8;
-      }
-      currentTime.setUTCHours(0, 0, 0, 0);
-      if(searchHour<10){
-        searchHour =`0${searchHour}:00`;
-      }else{
-        searchHour =`${searchHour}:00`;
-      }
-      
-    //   let searchTime = currentTime
-    //   searchTime.setHours(0, 0, 0, 0);
-    //   return new Response(JSON.stringify({message:currentTime.toISOString()}), { status: 200 });
-      
-      const courts = await Court.find({
-        date: {
-          $eq: new Date(currentTime.toISOString()),
-        },
-        timeSlot: {
-          $gte: searchHour,
-          $lte: searchHour,
-        },
-      });
-  
-      return new Response(JSON.stringify(courts), { status: 200 });
+        const currentTime = new Date();
+        const currentHour = currentTime.getHours();
+
+        // 設定查詢時間範圍
+        if (currentHour > 22) {
+            return new Response(
+                JSON.stringify({ message: "無需查詢，球場已關閉" }),
+                { status: 202 }
+            );
+        }
+
+        let searchHour = currentHour < 8 ? 8 : currentHour;
+        searchHour = searchHour < 10 ? `0${searchHour}:00` : `${searchHour}:00`;
+
+        currentTime.setUTCHours(0, 0, 0, 0);
+
+        // 查詢符合條件的 Court 資料
+        const courts = await Court.find({
+            date: {
+                $eq: new Date(currentTime.toISOString()),
+            },
+            timeSlot: {
+                $gte: searchHour,
+                $lte: searchHour,
+            },
+        });
+
+        if (!courts || courts.length === 0) {
+            return new Response(
+                JSON.stringify({ message: "無符合條件的場地資料" }),
+                { status: 404 }
+            );
+        }
+
+        // 提取所有的隊伍 ID
+        const teamIds = [];
+        courts.forEach((court) => {
+            if (court.teams) {
+                teamIds.push(...Array.from(court.teams.keys()));
+            }
+        });
+
+        // 查詢隊伍詳細資料
+        const teams = await Teams.find({ id: { $in: teamIds } });
+
+        // 整合 Court 和 Teams 資料
+        const result = courts.map((court) => {
+            const enrichedTeams = Array.from(court.teams.entries()).map(
+                ([teamId, courtLetter]) => {
+                    const team = teams.find((t) => t.id === teamId);
+                    return {
+                        teamId,
+                        court: courtLetter,
+                        teamname: team ? team.teamname : "Unknown",
+                        uname1: team ? team.uname1 : "Unknown",
+                    };
+                }
+            );
+            return {
+                ...court.toObject(),
+                teams: enrichedTeams,
+            };
+        });
+
+        return new Response(JSON.stringify(result), { status: 200 });
     } catch (error) {
-      console.error("Error fetching current usage:", error);
-      return new Response(
-        JSON.stringify({ error: "擷取當天場地使用情形時發生錯誤" }),
-        { status: 500 }
-      );
+        console.error("Error fetching current usage:", error);
+        return new Response(
+            JSON.stringify({ error: "擷取當天場地使用情形時發生錯誤" }),
+            { status: 500 }
+        );
     }
-  }
+}
