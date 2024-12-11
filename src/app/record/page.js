@@ -38,6 +38,77 @@ export default function RecordPage() {
     return isWaitlist ? "候補中" : "已登記";
   };
 
+  // const fetchUserRecords = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       router.push("/login");
+  //       return;
+  //     }
+
+  //     const payload = JSON.parse(decodeJwt(token));
+
+  //     // Fetch teams by username
+  //     const teamsResponse = await fetch(
+  //       `/api/dbConnect/teamsByUname?uname=${payload.username}`
+  //     );
+  //     if (!teamsResponse.ok) {
+  //       throw new Error("Failed to fetch teams");
+  //     }
+
+  //     const teamsData = await teamsResponse.json();
+
+  //     const courtsPromises = teamsData.map((team) =>
+  //       fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`).then((res) =>
+  //         res.json()
+  //       )
+  //     );
+
+  //     const courtsData = await Promise.all(courtsPromises);
+
+  //     // Combine and flatten team and court data
+  //     const formattedRecords = [];
+  //     teamsData.forEach((team, index) => {
+  //       const teamCourts = courtsData[index]; // Courts associated with this team
+  //       teamCourts.forEach((court) => {
+  //         const teams = court.teams;
+  //         const isWaitlisted = (court.waitlistTeams || []).includes(team.id);
+
+  //         if (teams[team.id] || isWaitlisted) {
+  //           formattedRecords.push({
+  //             id: `${team.id}-${court.date}-${court.timeSlot}`,
+  //             teamName: team.teamname,
+  //             teamId: team.id,
+  //             date: formatDate(court.date),
+  //             time: court.timeSlot,
+  //             status: checkStatus(isWaitlisted),
+  //             venue: isWaitlisted ? "候補中" : teams[team.id] || "未提供",
+  //             originalDate: court.date,
+  //             isWaitlisted: isWaitlisted
+  //           });
+  //         }
+  //       });
+  //     });
+
+  //     // Sort sorted records by team name
+  //     const sortedRecords = formattedRecords.sort((a, b) => {
+  //       if (a.teamName < b.teamName) return -1;
+  //       if (a.teamName > b.teamName) return 1;
+  //       return 0;
+  //     });
+
+  //     const finalRecords = sortedRecords.sort((a, b) => {
+  //       return new Date(a.originalDate) - new Date(b.originalDate);
+  //     });
+
+  //     setRecords(finalRecords);
+  //     setLoading(false);
+  //   } catch (err) {
+  //     setError(err.message);
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchUserRecords = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -45,9 +116,9 @@ export default function RecordPage() {
         router.push("/login");
         return;
       }
-
+  
       const payload = JSON.parse(decodeJwt(token));
-
+  
       // Fetch teams by username
       const teamsResponse = await fetch(
         `/api/dbConnect/teamsByUname?uname=${payload.username}`
@@ -55,17 +126,40 @@ export default function RecordPage() {
       if (!teamsResponse.ok) {
         throw new Error("Failed to fetch teams");
       }
-
+  
       const teamsData = await teamsResponse.json();
-
+  
+      // Get current time for filtering
+      const currentTime = new Date();
+  
       const courtsPromises = teamsData.map((team) =>
-        fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`).then((res) =>
-          res.json()
-        )
+        fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`)
+          .then((res) => res.json())
+          .then((courts) => {
+            const filteredCourts = courts.filter((court) => {
+              const courtDate = new Date(court.date);
+              const courtEndTime = new Date(
+                courtDate.toISOString().split("T")[0] + " " + court.timeSlot
+              );
+              return courtEndTime >= currentTime; // 保留未過期紀錄
+            });
+      
+            // 測試過濾效果：打印被過濾掉的紀錄
+            // const expiredCourts = courts.filter((court) => {
+            //   const courtDate = new Date(court.date);
+            //   const courtEndTime = new Date(
+            //     courtDate.toISOString().split("T")[0] + " " + court.timeSlot
+            //   );
+            //   return courtEndTime < currentTime; // 過濾過期的紀錄
+            // });
+            // console.log("Expired records for team:", team.id, expiredCourts);
+      
+            return filteredCourts;
+          })
       );
-
+  
       const courtsData = await Promise.all(courtsPromises);
-
+  
       // Combine and flatten team and court data
       const formattedRecords = [];
       teamsData.forEach((team, index) => {
@@ -73,7 +167,7 @@ export default function RecordPage() {
         teamCourts.forEach((court) => {
           const teams = court.teams;
           const isWaitlisted = (court.waitlistTeams || []).includes(team.id);
-
+  
           if (teams[team.id] || isWaitlisted) {
             formattedRecords.push({
               id: `${team.id}-${court.date}-${court.timeSlot}`,
@@ -84,23 +178,23 @@ export default function RecordPage() {
               status: checkStatus(isWaitlisted),
               venue: isWaitlisted ? "候補中" : teams[team.id] || "未提供",
               originalDate: court.date,
-              isWaitlisted: isWaitlisted
+              isWaitlisted: isWaitlisted,
             });
           }
         });
       });
-
-      // Sort sorted records by team name
+  
+      // Sort records by team name and date
       const sortedRecords = formattedRecords.sort((a, b) => {
         if (a.teamName < b.teamName) return -1;
         if (a.teamName > b.teamName) return 1;
         return 0;
       });
-
+  
       const finalRecords = sortedRecords.sort((a, b) => {
         return new Date(a.originalDate) - new Date(b.originalDate);
       });
-
+  
       setRecords(finalRecords);
       setLoading(false);
     } catch (err) {
