@@ -327,68 +327,70 @@ export default function Team() {
         onHide={() => setShowDialog(false)}
       >
         <form onSubmit={handleSubmit}>
-          {/* Team Name */}
-          <div className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem", marginTop: "0.5rem" }}>
-            <label
-              htmlFor="teamName"
-              style={{ width: "30%", textAlign: "right", marginRight: "1rem" }}
-            >
-              隊伍名稱:
-            </label>
-            <InputText
-              type="text"
-              id="teamName"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              required
-              style={{ width: "70%" }}
-            />
-          </div>
-
-          {/* Number of Members */}
-          <div className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-            <label
-              htmlFor="numMembers"
-              style={{ width: "30%", textAlign: "right", marginRight: "1rem" }}
-            >
-              隊伍人數:
-            </label>
-            <Dropdown
-              id="numMembers"
-              value={numMembers}
-              onChange={(e) => setNumMembers(e.value)}
-              options={memberOptions}
-              placeholder="Select Number of Members"
-              style={{ width: "70%" }}
-            />
-          </div>
-
-          {/* Member Inputs */}
-          {[...Array(numMembers)].map((_, index) => (
-            <div key={index} className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+          <div style={{ marginLeft: "-0.25rem" }}>
+            {/* Team Name */}
+            <div className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem", marginTop: "0.5rem" }}>
               <label
-                htmlFor={`userName-${index}`}
-                style={{ width: "30%", textAlign: "right", marginRight: "1rem" }}
+                htmlFor="teamName"
+                style={{ width: "30%", textAlign: "left", marginRight: "1rem" }}
               >
-                成員 {index + 1} 帳號名稱:
+                隊伍名稱:
               </label>
               <InputText
                 type="text"
-                id={`userName-${index}`}
-                value={userNames[index]}
-                onChange={(e) => {
-                  const newUserNames = [...userNames];
-                  newUserNames[index] = e.target.value;
-                  setUserNames(newUserNames);
-                }}
+                id="teamName"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
                 required
-                style={{ width: "70%" }}
+                style={{ width: "100%", height: "40px" }}
               />
             </div>
-          ))}
+
+            {/* Number of Members */}
+            <div className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+              <label
+                htmlFor="numMembers"
+                style={{ width: "30%", textAlign: "left", marginRight: "1rem" }}
+              >
+                隊伍人數:
+              </label>
+              <Dropdown
+                id="numMembers"
+                value={numMembers}
+                onChange={(e) => setNumMembers(e.value)}
+                options={memberOptions}
+                placeholder="Select Number of Members"
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            {/* Member Inputs */}
+            {[...Array(numMembers)].map((_, index) => (
+              <div key={index} className="team-edit-field" style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+                <label
+                  htmlFor={`userName-${index}`}
+                  style={{ width: "30%", textAlign: "left", marginRight: "1rem" }}
+                >
+                  成員 {index + 1}<br />帳號名稱:
+                </label>
+                <InputText
+                  type="text"
+                  id={`userName-${index}`}
+                  value={userNames[index]}
+                  onChange={(e) => {
+                    const newUserNames = [...userNames];
+                    newUserNames[index] = e.target.value;
+                    setUserNames(newUserNames);
+                  }}
+                  required
+                  style={{ width: "100%", height: "40px" }}
+                />
+              </div>
+            ))}
+          </div>
 
           {/* Buttons */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px", marginRight: "25px" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", marginRight: "25px" }}>
             <Button
               label="取消"
               className="p-button-text"

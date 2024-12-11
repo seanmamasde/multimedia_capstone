@@ -2,40 +2,51 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "primereact/button";
-import { Dropdown } from "primereact/dropdown";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
 import { decodeJwt } from "@/utils/jwtAuth";
 import AppMenubar from "../../components/menubar";
-import "primereact/resources/primereact.min.css";
-import "primereact/resources/themes/saga-blue/theme.css";
-import "primeicons/primeicons.css";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Card } from "primereact/card";
+import { Button } from "primereact/button";
+import { Dropdown } from "primereact/dropdown";
+import { Dialog } from "primereact/dialog";
+import { Sidebar } from "primereact/sidebar";
+import "./page.css";
 
 export default function CourtReservation() {
+  const router = useRouter();
   const max_courts = 60.0;
+
   const [days, setDays] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [courtData, setCourtData] = useState({});
-  const router = useRouter();
 
-  // Team Selection State
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
   const [teamDetails, setTeamDetails] = useState(null);
   const [username, setUsername] = useState(null);
-  const timeSlots = Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`);
+
   const [preferences, setPreferences] = useState({
     first: "",
     second: "",
     third: ""
   });
 
-  // Fetch Court Data and Days
+  // Sidebar and confirmation states
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Introduce refresh state in case we want to refetch after changes
+  const [refresh, setRefresh] = useState(false);
+
+  const timeSlots = Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`);
+
   useEffect(() => {
     const today = new Date();
     const generatedDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
+      // Reserve scenario: next 7 days offset (just as original code states)
       date.setDate(today.getDate() + 7 + i);
       return date.toISOString().split("T")[0];
     });
@@ -43,10 +54,8 @@ export default function CourtReservation() {
     setDays(generatedDays);
     setSelectedDate(generatedDays[0]);
 
-    // Fetch court data
     fetchCourtData(generatedDays[0], generatedDays[generatedDays.length - 1]);
 
-    // Check authentication and fetch user's teams
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
@@ -62,21 +71,17 @@ export default function CourtReservation() {
       localStorage.removeItem("token");
       router.push("/login");
     }
-  }, []);
+  }, [router, refresh]);
 
-  // Fetch Court Data
   const fetchCourtData = async (startDate, endDate) => {
     try {
-      const response = await fetch(
-        `/api/dbConnect/getReservation?startDate=${startDate}&endDate=${endDate}`
-      );
-  
+      const response = await fetch(`/api/dbConnect/getReservation?startDate=${startDate}&endDate=${endDate}`, { cache: 'no-store' });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
-  
       const transformed = {};
 
       data.forEach((reservation) => {
@@ -84,11 +89,12 @@ export default function CourtReservation() {
         if (!transformed[dateKey]) {
           transformed[dateKey] = {};
         }
-  
-        if (!transformed[dateKey][reservation.preferences.first])
-          transformed[dateKey][reservation.preferences.first] = 1;
+
+        const firstPref = reservation.preferences.first;
+        if (!transformed[dateKey][firstPref])
+          transformed[dateKey][firstPref] = 1;
         else
-          transformed[dateKey][reservation.preferences.first]++;
+          transformed[dateKey][firstPref]++;
       });
 
       setCourtData(transformed);
@@ -96,11 +102,10 @@ export default function CourtReservation() {
       console.error("Error fetching court data:", error);
     }
   };
-  
-  // Fetch Teams for User
+
   const fetchUserTeams = async (uname) => {
     try {
-      const response = await fetch(`/api/dbConnect/teamsByUname?uname=${uname}`);
+      const response = await fetch(`/api/dbConnect/teamsByUname?uname=${uname}`, { cache: 'no-store' });
       const data = await response.json();
       setTeams(data);
     } catch (error) {
@@ -108,10 +113,9 @@ export default function CourtReservation() {
     }
   };
 
-  // Fetch Team Details
   const fetchTeamDetails = async (teamId) => {
     try {
-      const response = await fetch(`/api/dbConnect/teamByTid?tid=${teamId}`);
+      const response = await fetch(`/api/dbConnect/teamByTid?tid=${teamId}`, { cache: 'no-store' });
       if (response.ok) {
         const teamData = await response.json();
         setTeamDetails(teamData);
@@ -123,17 +127,28 @@ export default function CourtReservation() {
     }
   };
 
-  // Court Data Utility Functions
   const getColorForTimeSlot = (date, timeSlot) => {
     const courts = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
     if (!courts) return "white";
-
-    const occupancyRate = courts / max_courts;
 
     if (courts >= 30) return "#FF0000";
     if (courts >= 6) return "#006400";
     if (courts >= 1) return "#90EE90";
     return "white";
+  };
+
+  const getCellBackgroundColor = (date, timeSlot) => {
+    const courts = courtData[date]?.[`${timeSlot.toString().padStart(2, "0")}:00`];
+
+    // Empty timestamp logic
+    if (!courts) {
+      if (timeSlot % 2 === 1) return "#fcfcfc"; // Darker background
+      return "#ffffff"; // White background
+    }
+
+    if (courts >= 30) return "#FF0000"; // Fully booked
+    if (courts >= 6) return "#006400"; // High occupancy
+    if (courts >= 1) return "#90EE90"; // Low occupancy
   };
 
   const transposedData = Array.from({ length: 15 }, (_, i) => {
@@ -145,9 +160,8 @@ export default function CourtReservation() {
     return rowData;
   });
 
-  // Team Selection Handlers
   const handleTeamSelection = (e) => {
-    const teamId = e.target.value;
+    const teamId = e.value;
     setSelectedTeam(teamId);
     if (teamId) {
       fetchTeamDetails(teamId);
@@ -170,233 +184,257 @@ export default function CourtReservation() {
       alert("每個志願序必須選擇不同的時段！");
       return false;
     }
+    if (!preferences.first) {
+      alert("請至少選擇第一志願時段！");
+      return false;
+    }
+    if (!selectedTeam) {
+      alert("請選擇隊伍！");
+      return false;
+    }
     return true;
   };
 
-  const handleConfirmReservation = () => {
-    if (!selectedTeam) {
-      alert("請選擇隊伍！");
-      return;
-    }
+  const handleStartReservation = () => {
+    if (!validatePreferences()) return;
+    setShowConfirmation(true);
+  };
 
-    if (!preferences.first) {
-      alert("請至少選擇第一志願時段！");
-      return;
-    }
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      const { first, second, third } = preferences;
+      const response = await fetch("/api/reserve_courts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          teamId: selectedTeam,
+          preferences: { first, second, third },
+        }),
+      });
 
-    if (!validatePreferences()) {
-      return;
+      if (response.ok) {
+        alert("預約成功！");
+        setShowConfirmation(false);
+        setShowSidebar(false);
+        setRefresh(prev => !prev);
+      } else {
+        const error = await response.json();
+        alert(`預約失敗: ${error.message}`);
+      }
+    } catch (error) {
+      alert("預約過程發生錯誤，請稍後再試");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    const registrationParams = new URLSearchParams({
-      team: selectedTeam,
-      date: selectedDate,
-      first: preferences.first,
-      second: preferences.second,
-      third: preferences.third
-    }).toString();
+  };
 
-    router.push(`/play/reserve/confirmation?${registrationParams}`);
+  const timeSlotOptions = timeSlots.map(ts => ({ label: ts, value: ts }));
+
+  // Table footer: Show Sidebar Button
+  const renderFooter = () => {
+    return (
+      <div className="footer-container">
+        <Button
+          icon="pi pi-bars"
+          label="顯示預約面板"
+          className="p-button-text p-button-plus"
+          onClick={() => setShowSidebar(true)}
+        />
+      </div>
+    );
   };
 
   return (
-    <div style={{
-      margin: 0,
-      padding: 0,
-      height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden"
-    }}>
+    <div>
       <AppMenubar />
-      
-      <div style={{
-        display: 'flex',
-        flex: 1,
-        overflow: 'hidden'
-      }}>
-        {/* Left Side: Court Availability */}
-        <div style={{
-          width: '60%',
-          overflowY: 'auto',
-          padding: '20px',
-          borderRight: '1px solid #ddd'
-        }}>
-          <h2 className="text-2xl font-bold mb-4">場地預約情況</h2>
-          {days.length > 0 ? (
-            <DataTable
-              value={transposedData}
-              scrollable
-              scrollHeight="calc(100vh - 200px)"
-              tableStyle={{ minWidth: "100%" }}
-              style={{
-                width: "100%",
-                border: "1px solid #ddd",
+      <br />
+      <h1 className="title">場地預約</h1>
+      <div className="teams-table-container">
+        <DataTable
+          value={transposedData}
+          className="teams-table"
+          stripedRows
+          emptyMessage="沒有資料"
+          scrollable
+          scrollHeight="calc(100vh - 250px)"
+          tableStyle={{ minWidth: "60rem" }}
+          footer={renderFooter()}
+        >
+          <Column
+            field="time"
+            header="時間"
+            alignHeader="center"
+            style={{ textAlign: "center", whiteSpace: "nowrap", backgroundColor: "#f7f7f7" }}
+            frozen
+          />
+          {days.map((day) => (
+            <Column
+              key={day}
+              field={day}
+              header={day}
+              alignHeader="center"
+              body={(rowData) => {
+                const bgColor = getCellBackgroundColor(day, parseInt(rowData.time, 10));
+                return (
+                  <div
+                    style={{
+                      backgroundColor: bgColor,
+                      width: "128px",
+                      height: "72px",
+                      marginTop: "-16px",
+                      marginBottom: "-16px",
+                      marginLeft: "-16px",
+                      marginRight: "-16px",
+                    }}
+                  />
+                );
               }}
-            >
-              <Column
-                field="time"
-                header="時間"
-                style={{
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                  backgroundColor: "#f7f7f7",
-                }}
-                frozen
-              />
-              {days.map((day) => (
-                <Column
-                  key={day}
-                  field={day}
-                  header={day}
-                  body={(rowData) => (
-                    <div
-                      style={{
-                        backgroundColor: getColorForTimeSlot(day, parseInt(rowData.time, 10)),
-                        width: "100%",
-                        height: "40px",
-                      }}
-                    >
-                      &nbsp;
-                    </div>
-                  )}
-                  style={{ textAlign: "center", whiteSpace: "nowrap" }}
-                />
-              ))}
-            </DataTable>
-          ) : (
-            <p style={{ textAlign: "center" }}>載入中...</p>
-          )}
-        </div>
-
-        {/* Right Side: Team and Time Slot Selection */}
-        <div style={{
-          width: '40%',
-          overflowY: 'auto',
-          padding: '20px',
-          backgroundColor: '#f9f9f9'
-        }}>
-          <h2 className="text-2xl font-bold mb-6">選擇隊伍與時段志願</h2>
-
-          {/* Date Dropdown */}
-          <div className="mb-6">
-            <label className="block mb-2 font-semibold">選擇日期:</label>
-            <Dropdown
-              value={selectedDate}
-              options={days.map((day) => ({ label: day, value: day }))}
-              onChange={(e) => setSelectedDate(e.value)}
-              placeholder="選擇日期"
-              style={{
-                width: "100%",
-              }}
+              style={(rowData) => ({
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                padding: "0",
+              })}
             />
-          </div>
+          ))}
+        </DataTable>
+      </div>
 
-          {/* Team Selection */}
-          <div className="mb-6">
-            <label htmlFor="teamSelect" className="block mb-2 font-semibold">選擇隊伍:</label>
-            <select 
-              id="teamSelect" 
-              value={selectedTeam} 
-              onChange={handleTeamSelection}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">請選擇隊伍</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.teamname}
-                </option>
+      {/* Confirmation Dialog */}
+      <Dialog
+        header="確認預約資訊"
+        visible={showConfirmation}
+        style={{ width: "30rem" }}
+        modal
+        onHide={() => setShowConfirmation(false)}
+      >
+        {teamDetails && (
+          <div style={{ marginTop: '1rem' }}>
+            <p><strong>隊伍名稱:</strong> {teamDetails.teamname}</p>
+            <p><strong>日期:</strong> {selectedDate}</p>
+            <p><strong>志願時段:</strong></p>
+            <ul style={{ paddingLeft: '1.5rem', listStyle: 'disc' }}>
+              {preferences.first && <li>第一志願: {preferences.first}</li>}
+              {preferences.second && <li>第二志願: {preferences.second}</li>}
+              {preferences.third && <li>第三志願: {preferences.third}</li>}
+            </ul>
+            <p><strong>隊伍成員:</strong></p>
+            <ul style={{ paddingLeft: '1.5rem', listStyle: 'disc' }}>
+              {Array.from({ length: teamDetails.memberNum }).map((_, idx) => (
+                <li key={idx}>{teamDetails[`uname${idx + 1}`]}</li>
               ))}
-            </select>
+            </ul>
           </div>
+        )}
 
-          {/* Team Details */}
-          {teamDetails && (
-            <div className="mb-6 p-4 bg-gray-50 rounded">
-              <h3 className="font-semibold mb-2">隊伍詳情</h3>
-              <p>隊伍名稱: {teamDetails.teamname}</p>
-              <p>隊伍成員數量: {teamDetails.memberNum}</p>
-              <div className="mt-2">
-                <p>成員列表:</p>
-                <ul className="list-disc pl-5">
-                  {Array.from({ length: teamDetails.memberNum }).map((_, idx) => (
-                    <li key={idx}>
-                      成員 {idx + 1}: {teamDetails[`uname${idx + 1}`]}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Time Slots Preferences */}
-          <div className="mb-6">
-            <h3 className="block mb-2 font-semibold">選擇時段志願序</h3>
-            <p className="text-sm text-gray-600 mb-4">請依照優先順序選擇時段，系統將依照志願序進行分配。第一志願為必填，第二、三志願為選填。</p>
-            
-            {/* First Preference */}
-            <div className="mb-4">
-              <label htmlFor="firstPreference" className="block mb-2">第一志願時段:</label>
-              <select
-                id="firstPreference"
-                value={preferences.first}
-                onChange={(e) => handlePreferenceChange('first', e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">請選擇時段</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Second Preference */}
-            <div className="mb-4">
-              <label htmlFor="secondPreference" className="block mb-2">第二志願時段: (選填)</label>
-              <select
-                id="secondPreference"
-                value={preferences.second}
-                onChange={(e) => handlePreferenceChange('second', e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">請選擇時段</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Third Preference */}
-            <div className="mb-4">
-              <label htmlFor="thirdPreference" className="block mb-2">第三志願時段: (選填)</label>
-              <select
-                id="thirdPreference"
-                value={preferences.third}
-                onChange={(e) => handlePreferenceChange('third', e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">請選擇時段</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Confirm Button */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "4rem", marginTop: "2rem" }}>
           <Button
-            label="開始預約"
-            className="p-button-primary w-full"
-            onClick={handleConfirmReservation}
+            label="取消"
+            className="p-button-text"
+            onClick={() => setShowConfirmation(false)}
+            disabled={isSubmitting}
+          />
+          <Button
+            label={isSubmitting ? "處理中..." : "確認預約"}
+            className="p-button-primary"
+            onClick={handleConfirm}
+            disabled={isSubmitting}
           />
         </div>
-      </div>
-    </div>
+      </Dialog>
+
+      {/* Sidebar for Reservation Panel */}
+      <Sidebar visible={showSidebar} position="right" onHide={() => setShowSidebar(false)} style={{ width: '300px' }}>
+        <h2 className="sidebar-title">選擇日期、隊伍與時段</h2>
+
+        {/* Date Selection */}
+        <div className="selection-container">
+          <label className="form-label">選擇日期:</label>
+          <Dropdown
+            value={selectedDate}
+            options={days.map((day) => ({ label: day, value: day }))}
+            onChange={(e) => setSelectedDate(e.value)}
+            className="form-dropdown"
+            placeholder="選擇日期"
+          />
+        </div>
+
+        {/* Team Selection */}
+        <div className="selection-container">
+          <label className="form-label">選擇隊伍:</label>
+          <Dropdown
+            value={selectedTeam}
+            options={teams.map(t => ({ label: t.teamname, value: t.id }))}
+            onChange={handleTeamSelection}
+            className="form-dropdown"
+            placeholder="選擇隊伍"
+          />
+        </div>
+
+        {/* Display selected team details */}
+        {teamDetails && (
+          <Card title="隊伍詳情" className="team-details-card">
+            <p><strong>隊伍名稱:</strong> {teamDetails.teamname}</p>
+            <p><strong>成員數量:</strong> {teamDetails.memberNum}</p>
+            <div className="team-members-list">
+              <p><strong>成員列表:</strong></p>
+              <ul>
+                {Array.from({ length: teamDetails.memberNum }).map((_, idx) => (
+                  <li key={idx}>
+                    成員 {idx + 1}: {teamDetails[`uname${idx + 1}`]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Card>
+        )}
+
+        {/* Preferences */}
+        <div>
+          <h3 className="preferences-title">選擇時段志願</h3>
+          <p className="preferences-instruction">第一志願為<strong>必填</strong>，第二、三志願為<strong>選填</strong>。</p>
+          <div className="selection-container">
+            <label className="form-label">第一志願時段:</label>
+            <Dropdown
+              value={preferences.first}
+              options={timeSlotOptions}
+              onChange={(e) => handlePreferenceChange('first', e.value)}
+              className="form-dropdown"
+              placeholder="選擇第一志願時段"
+            />
+          </div>
+          <div className="selection-container">
+            <label className="form-label">第二志願時段: (選填)</label>
+            <Dropdown
+              value={preferences.second}
+              options={timeSlotOptions}
+              onChange={(e) => handlePreferenceChange('second', e.value)}
+              className="form-dropdown"
+              placeholder="選擇第二志願時段"
+            />
+          </div>
+          <div className="selection-container">
+            <label className="form-label">第三志願時段: (選填)</label>
+            <Dropdown
+              value={preferences.third}
+              options={timeSlotOptions}
+              onChange={(e) => handlePreferenceChange('third', e.value)}
+              className="form-dropdown"
+              placeholder="選擇第三志願時段"
+            />
+          </div>
+        </div>
+
+        <Button
+          label="預約"
+          className="p-button-primary w-full confirm-button"
+          onClick={handleStartReservation}
+          style={{ marginTop: '1rem' }}
+        />
+      </Sidebar>
+    </div >
   );
 }

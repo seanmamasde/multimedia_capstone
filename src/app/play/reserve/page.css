@@ -1,0 +1,76 @@
+html, body {
+  overflow: hidden;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.teams-table-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  margin-top: -20px;
+}
+
+.teams-table {
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Footer container */
+.footer-container {
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  margin-top: -5px;
+  margin-bottom: -5px;
+}
+
+/* Sidebar and form styling */
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.selection-container {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-dropdown {
+  width: 100%;
+}
+
+.team-details-card {
+  margin-bottom: 1.5rem;
+  background-color: #f0f0f0;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1)
+}
+.team-members-list ul {
+  margin-top: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.team-members-list {
+  margin-top: 0.5rem;
+}
+
+.confirm-button {
+  margin-top: 1rem;
+  margin-left: 0px;
+  margin-right: 0px;
+}
