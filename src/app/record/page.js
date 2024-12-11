@@ -15,7 +15,7 @@ export default function RecordPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // For lazy loading state
+  // Updated lazyState to include more filter options
   const [lazyState, setLazyState] = useState({
     first: 0,
     rows: 10,
@@ -24,10 +24,9 @@ export default function RecordPage() {
     filters: {
       teamName: { value: null, matchMode: "contains" },
       date: { value: null, matchMode: "contains" },
+      status: { value: null, matchMode: "contains" },
     },
   });
-
-  const totalRecords = records.length;
 
   const formatDate = (dateString) => {
     if (!dateString) return "未提供";
@@ -59,9 +58,7 @@ export default function RecordPage() {
 
       const teamsData = await teamsResponse.json();
 
-      // Get current time for filtering
-      const currentTime = new Date();
-
+      // Fetch court records
       const courtsPromises = teamsData.map((team) =>
         fetch(`/api/courts?teamId=${team.id}&includeWaitlist=true`)
           .then((res) => res.json())
@@ -77,31 +74,49 @@ export default function RecordPage() {
 
               return {
                 ...court,
-                isExpired: extendedEndTime < currentTime, // Check if expired
+                isExpired: extendedEndTime < new Date(), // Check if expired
+                recordType: 'court'
               };
             });
           })
       );
+      
+      // Fetch reservations
+      const reservationsPromises = teamsData.map((team) =>
+        fetch(`/api/reservations?teamId=${team.id}`)
+          .then((res) => res.json())
+          .then((reservations) => {
+            return reservations.map((reservation) => ({
+              ...reservation,
+              teamName: team.teamname,
+              recordType: 'reservation'
+            }));
+          })
+      );
 
       const courtsData = await Promise.all(courtsPromises);
+      const reservationsData = await Promise.all(reservationsPromises);
 
-      // Combine and flatten team and court data
+      // Combine and process records
       const formattedRecords = [];
+
+      // Process court records
       teamsData.forEach((team, index) => {
-        const teamCourts = courtsData[index]; // Courts associated with this team
+        const teamCourts = courtsData[index];
         teamCourts.forEach((court) => {
           const teams = court.teams;
           const isWaitlisted = (court.waitlistTeams || []).includes(team.id);
 
           if (teams[team.id] || isWaitlisted) {
             formattedRecords.push({
-              id: `${team.id}-${court.date}-${court.timeSlot}`,
+              id: `court-${team.id}-${court.date}-${court.timeSlot}`,
               teamName: team.teamname,
               teamId: team.id,
               date: formatDate(court.date),
               time: court.timeSlot,
               status: checkStatus(isWaitlisted, court.isExpired),
               venue: isWaitlisted ? "候補中" : teams[team.id] || "未提供",
+              recordType: 'court',
               originalDate: court.date,
               isWaitlisted: isWaitlisted,
               isExpired: court.isExpired,
@@ -110,14 +125,66 @@ export default function RecordPage() {
         });
       });
 
-      // Sort records by team name and date
-      const sortedRecords = formattedRecords.sort((a, b) => {
-        if (a.teamName < b.teamName) return -1;
-        if (a.teamName > b.teamName) return 1;
-        return 0;
+      // Process reservation records
+      teamsData.forEach((team, index) => {
+        const teamReservations = reservationsData[index];
+        teamReservations.forEach((reservation) => {
+          if (reservation.preferences.first) {
+            formattedRecords.push({
+              id: `${reservation._id}`,
+              teamName: team.teamname,
+              teamId: team.id,
+              date: formatDate(reservation.date),
+              time: reservation.preferences.first,
+              status: reservation.status === 'pending' 
+                ? `志願一` 
+                : reservation.status,
+              venue: "待確認",
+              recordType: 'reservation',
+              originalDate: reservation.date,
+              isExpired: new Date(reservation.date) < new Date(),
+              preferences: reservation.preferences,
+            });
+          }
+          if (reservation.preferences.second) {
+            formattedRecords.push({
+              id: `${reservation._id}`,
+              teamName: team.teamname,
+              teamId: team.id,
+              date: formatDate(reservation.date),
+              time: reservation.preferences.second,
+              status: reservation.status === 'pending' 
+                ? `志願二` 
+                : reservation.status,
+              venue: "待確認",
+              recordType: 'reservation',
+              originalDate: reservation.date,
+              isExpired: new Date(reservation.date) < new Date(),
+              preferences: reservation.preferences,
+            });
+          }
+          if (reservation.preferences.third) {
+            formattedRecords.push({
+              id: `${reservation._id}`,
+              teamName: team.teamname,
+              teamId: team.id,
+              date: formatDate(reservation.date),
+              time: reservation.preferences.third,
+              status: reservation.status === 'pending' 
+                ? `志願三` 
+                : reservation.status,
+              venue: "待確認",
+              recordType: 'reservation',
+              originalDate: reservation.date,
+              isExpired: new Date(reservation.date) < new Date(),
+              preferences: reservation.preferences,
+            });
+          }
+        });
       });
 
-      const finalRecords = sortedRecords.sort((a, b) => {
+      // Sort records
+      const finalRecords = formattedRecords.sort((a, b) => {
         return new Date(a.originalDate) - new Date(b.originalDate);
       });
 
@@ -126,40 +193,6 @@ export default function RecordPage() {
     } catch (err) {
       setError(err.message);
       setLoading(false);
-    }
-  };
-
-  const handleCancelRegistration = async (record) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const response = await fetch("/api/courts", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: record.originalDate,
-          timeSlot: record.time,
-          cancelledTeamId: record.teamId,
-        }),
-      });
-
-      if (response.ok) {
-        await fetchUserRecords();
-        alert("取消登記成功");
-      } else {
-        const errorData = await response.json();
-        alert(`取消登記失敗: ${errorData.message}`);
-      }
-    } catch (err) {
-      console.error("Error cancelling registration:", err);
-      alert("取消登記時發生錯誤");
     }
   };
 
@@ -227,16 +260,73 @@ export default function RecordPage() {
   );
   const totalFilteredRecords = filteredSortedRecords.length;
 
-  const actionTemplate = (rowData) => {
+  const handleCancelRegistration = async (record) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    let response;
+    if (record.recordType === 'court') {
+      response = await fetch("/api/courts", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          date: record.originalDate,
+          timeSlot: record.time,
+          cancelledTeamId: record.teamId,
+        }),
+      });
+    } else if (record.recordType === 'reservation') {
+      const reservationId = record.id;
+      response = await fetch("/api/reservations", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reservationId: reservationId,
+        }),
+      });
+    }
+
+    if (response.ok) {
+      await fetchUserRecords();
+      alert("取消成功");
+    } else {
+      const errorData = await response.json();
+      alert(`取消失敗: ${errorData.message}`);
+    }
+  } catch (err) {
+    console.error("Error cancelling registration:", err);
+    alert("取消時發生錯誤");
+  }
+};
+
+  const actionTemplate = (rowData) => {    
+    let label = '';
+    if (rowData.recordType === 'court')
+      label = '取消登記';
+    else if (rowData.status === '志願一')
+      label = '取消預約';
+    else
+      return '';
+
     return (
       <Button
-        label="取消登記"
-        className="p-button-danger"
-        onClick={() => handleCancelRegistration(rowData)}
-        disabled={rowData.isExpired}
+          label={label}
+          className="p-button-danger"
+          onClick={() => handleCancelRegistration(rowData)}
+          disabled={rowData.isExpired}
       />
     );
-  };
+};
 
   return (
     <div>
@@ -287,6 +377,8 @@ export default function RecordPage() {
           <Column
             field="status"
             header="狀態"
+            filter
+            filterPlaceholder="搜尋"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
           ></Column>

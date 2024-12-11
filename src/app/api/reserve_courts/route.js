@@ -79,30 +79,6 @@ export async function POST(req) {
 
     await reservation.save();
 
-    // 更新 Court 的選擇欄位
-    // const timeSlots = { first, second, third };
-    // for (const [priority, timeSlot] of Object.entries(timeSlots)) {
-    //   if (!timeSlot) continue;
-
-    //   const court = await Court.findOneAndUpdate(
-    //     { date: new Date(date), timeSlot },
-    //     { $setOnInsert: { totalCourts: 6, reservedCourts: 0 } },
-    //     { upsert: true, new: true }
-    //   );
-
-    //   // 將 teamId 加入對應的志願欄位
-    //   const choiceField = `${priority}ChoiceTeams`;
-    //   if (!court[choiceField]) {
-    //     court[choiceField] = [];
-    //   }
-    //   if (!court[choiceField].includes(teamId)) {
-    //     court[choiceField].push(teamId);
-    //   }
-      
-    //   court.reservedCourts += 1;
-    //   await court.save();
-    // }
-
     return new Response(
       JSON.stringify({
         message: "預約申請已送出，請等待結果通知",
@@ -122,40 +98,3 @@ export async function POST(req) {
     );
   }
 }
-
-// reservation/page.js
-const fetchCourtData = async (startDate, endDate) => {
-  try {
-    // Update the endpoint to match the API route
-    const response = await fetch(
-      `/api/reserve_courts?startDate=${startDate}&endDate=${endDate}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-
-    const transformed = {};
-    data.forEach((court) => {
-      const dateKey = new Date(court.date).toISOString().split("T")[0];
-      if (!transformed[dateKey]) {
-        transformed[dateKey] = {};
-      }
-      transformed[dateKey][court.timeSlot] = {
-        reserved: court.reservedCourts,
-        total: court.totalCourts,
-        firstChoiceTeams: court.firstChoiceTeams || [],
-        secondChoiceTeams: court.secondChoiceTeams || [],
-        thirdChoiceTeams: court.thirdChoiceTeams || [],
-      };
-    });
-    
-    setCourtData(transformed);
-  } catch (error) {
-    console.error("Error fetching court data:", error);
-    // You might want to set an error state here to show to the user
-    throw error;
-  }
-};
