@@ -268,6 +268,13 @@ export default function RecordPage() {
       return;
     }
 
+    const isConfirmed = window.confirm(
+      `確定要取消登記以下紀錄嗎？\n\n隊伍名稱：${record.teamName}\n日期：${record.date}\n時間：${record.time}`
+    );
+
+    if (!isConfirmed)
+      return;
+
     let response;
     if (record.recordType === 'court') {
       response = await fetch("/api/courts", {
