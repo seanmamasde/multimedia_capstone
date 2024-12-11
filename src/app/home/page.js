@@ -127,6 +127,8 @@ export default function Home() {
             </Card>
           ))}
         </div>
+
+        
         <h2 className="title">當前場地使用情形</h2>
         {loading ? (
           <p>載入中...</p>

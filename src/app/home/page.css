@@ -62,7 +62,7 @@
 .rule-items {
   list-style: none;
   padding: 0;
-  margin: 16px 0 0;
+  margin-bottom: -16px;
   color: #4b5563;
 }
 

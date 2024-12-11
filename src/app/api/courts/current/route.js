@@ -12,7 +12,7 @@ export async function GET(req) {
         // 設定查詢時間範圍
         if (currentHour > 22) {
             return new Response(
-                JSON.stringify({ message: "無需查詢，球場已關閉" }),
+                JSON.stringify({ message: "非球場營業時間" }),
                 { status: 202 }
             );
         }
