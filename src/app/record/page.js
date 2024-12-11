@@ -131,12 +131,22 @@ export default function RecordPage() {
 
   const handleCancelRegistration = async (record) => {
     try {
+      // 顯示確認對話框
+      const isConfirmed = window.confirm(
+        `確定要取消登記以下紀錄嗎？\n\n隊伍名稱：${record.teamName}\n日期：${record.date}\n時間：${record.time}`
+      );
+  
+      // 如果使用者取消，則不進行操作
+      if (!isConfirmed) {
+        return;
+      }
+  
       const token = localStorage.getItem("token");
       if (!token) {
         router.push("/login");
         return;
       }
-
+  
       const response = await fetch("/api/courts", {
         method: "PUT",
         headers: {
@@ -149,7 +159,7 @@ export default function RecordPage() {
           cancelledTeamId: record.teamId,
         }),
       });
-
+  
       if (response.ok) {
         await fetchUserRecords();
         alert("取消登記成功");
@@ -161,7 +171,7 @@ export default function RecordPage() {
       console.error("Error cancelling registration:", err);
       alert("取消登記時發生錯誤");
     }
-  };
+  };  
 
   const getFilteredAndSortedRecords = () => {
     let filtered = [...records];
@@ -267,15 +277,15 @@ export default function RecordPage() {
           <Column
             field="teamName"
             header="隊伍名稱"
-            filter
-            filterPlaceholder="搜尋"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
             sortable
           ></Column>
           <Column
             field="date"
             header="日期"
-            filter
-            filterPlaceholder="搜尋"
+            alignHeader="center"
+            style={{ textAlign: "center", width: "5rem" }}
             sortable
           ></Column>
           <Column
@@ -283,18 +293,21 @@ export default function RecordPage() {
             header="時間"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             field="status"
             header="狀態"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             field="venue"
             header="場地"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
+            sortable
           ></Column>
           <Column
             body={actionTemplate}
