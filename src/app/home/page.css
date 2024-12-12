@@ -19,7 +19,7 @@
   max-width: 960px;
   margin: 0 auto;
   padding: 16px 24px;
-  margin-top: calc(60px + var(--scroll-offset, 0px)); /* Adds dynamic offset */
+  margin-top: 60px;
 }
 
 .title {
