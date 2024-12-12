@@ -15,12 +15,10 @@ export default function RecordPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Updated lazyState to include more filter options
   const [lazyState, setLazyState] = useState({
     first: 0,
     rows: 10,
-    sortField: null,
-    sortOrder: null,
+    multiSortMeta: [],
     filters: {
       teamName: { value: null, matchMode: "contains" },
       date: { value: null, matchMode: "contains" },
@@ -80,7 +78,7 @@ export default function RecordPage() {
             });
           })
       );
-      
+
       // Fetch reservations
       const reservationsPromises = teamsData.map((team) =>
         fetch(`/api/reservations?teamId=${team.id}`)
@@ -136,8 +134,8 @@ export default function RecordPage() {
               teamId: team.id,
               date: formatDate(reservation.date),
               time: reservation.preferences.first,
-              status: reservation.status === 'pending' 
-                ? `志願一` 
+              status: reservation.status === 'pending'
+                ? `志願一`
                 : reservation.status,
               venue: "待確認",
               recordType: 'reservation',
@@ -153,8 +151,8 @@ export default function RecordPage() {
               teamId: team.id,
               date: formatDate(reservation.date),
               time: reservation.preferences.second,
-              status: reservation.status === 'pending' 
-                ? `志願二` 
+              status: reservation.status === 'pending'
+                ? `志願二`
                 : reservation.status,
               venue: "待確認",
               recordType: 'reservation',
@@ -170,8 +168,8 @@ export default function RecordPage() {
               teamId: team.id,
               date: formatDate(reservation.date),
               time: reservation.preferences.third,
-              status: reservation.status === 'pending' 
-                ? `志願三` 
+              status: reservation.status === 'pending'
+                ? `志願三`
                 : reservation.status,
               venue: "待確認",
               recordType: 'reservation',
@@ -199,7 +197,7 @@ export default function RecordPage() {
   const getFilteredAndSortedRecords = () => {
     let filtered = [...records];
 
-    // Filtering
+    // Filtering logic remains the same
     Object.keys(lazyState.filters).forEach((field) => {
       const filter = lazyState.filters[field];
       if (filter && filter.value) {
@@ -211,15 +209,24 @@ export default function RecordPage() {
       }
     });
 
-    // Sorting
-    if (lazyState.sortField) {
-      filtered.sort((a, b) => {
-        const valA = a[lazyState.sortField];
-        const valB = b[lazyState.sortField];
-        let result = 0;
-        if (valA < valB) result = -1;
-        else if (valA > valB) result = 1;
-        return lazyState.sortOrder === 1 ? result : -result;
+    // Multiple sorting logic
+    if (lazyState.multiSortMeta && lazyState.multiSortMeta.length > 0) {
+      filtered.sort((data1, data2) => {
+        for (let i = 0; i < lazyState.multiSortMeta.length; i++) {
+          const meta = lazyState.multiSortMeta[i];
+          const value1 = data1[meta.field];
+          const value2 = data2[meta.field];
+
+          let result = 0;
+          if (value1 < value2) result = -1;
+          else if (value1 > value2) result = 1;
+
+          // If a difference is found, return according to the order
+          if (result !== 0) {
+            return meta.order * result;
+          }
+        }
+        return 0;
       });
     }
 
@@ -231,11 +238,50 @@ export default function RecordPage() {
   };
 
   const onSort = (event) => {
-    setLazyState((prev) => ({
-      ...prev,
-      sortField: event.sortField,
-      sortOrder: event.sortOrder,
-    }));
+    setLazyState((prev) => {
+      const existingMeta = prev.multiSortMeta || [];
+      const newMeta = event.multiSortMeta || [];
+
+      // If no sort meta is provided, clear all sorting
+      if (newMeta.length === 0) {
+        return {
+          ...prev,
+          multiSortMeta: []
+        };
+      }
+
+      const lastClicked = newMeta[0];
+      const existingSort = existingMeta.find((m) => m.field === lastClicked.field);
+
+      // Handle cycling for the clicked column
+      if (existingSort) {
+        if (existingSort.order === 1) {
+          // Ascending -> Descending
+          return {
+            ...prev,
+            multiSortMeta: [
+              ...existingMeta.filter((m) => m.field !== lastClicked.field), // Remove old sort
+              { field: lastClicked.field, order: -1 } // Add descending sort
+            ]
+          };
+        } else if (existingSort.order === -1) {
+          // Descending -> Remove sort
+          return {
+            ...prev,
+            multiSortMeta: existingMeta.filter((m) => m.field !== lastClicked.field) // Remove sort entirely
+          };
+        }
+      } else {
+        // If no existing sort for this field, add ascending sort
+        return {
+          ...prev,
+          multiSortMeta: [
+            ...existingMeta, // Preserve existing sorting
+            { field: lastClicked.field, order: 1 } // Add ascending sort
+          ]
+        };
+      }
+    });
   };
 
   const onFilter = (event) => {
@@ -261,79 +307,97 @@ export default function RecordPage() {
   const totalFilteredRecords = filteredSortedRecords.length;
 
   const handleCancelRegistration = async (record) => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const isConfirmed = window.confirm(
+        `確定要取消登記以下紀錄嗎？\n\n隊伍名稱：${record.teamName}\n日期：${record.date}\n時間：${record.time}`
+      );
+
+      if (!isConfirmed)
+        return;
+
+      let response;
+      if (record.recordType === 'court') {
+        response = await fetch("/api/courts", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            date: record.originalDate,
+            timeSlot: record.time,
+            cancelledTeamId: record.teamId,
+          }),
+        });
+      } else if (record.recordType === 'reservation') {
+        const reservationId = record.id;
+        response = await fetch("/api/reservations", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reservationId: reservationId,
+          }),
+        });
+      }
+
+      if (response.ok) {
+        await fetchUserRecords();
+        alert("取消成功");
+      } else {
+        const errorData = await response.json();
+        alert(`取消失敗: ${errorData.message}`);
+      }
+    } catch (err) {
+      console.error("Error cancelling registration:", err);
+      alert("取消時發生錯誤");
     }
+  };
 
-    const isConfirmed = window.confirm(
-      `確定要取消登記以下紀錄嗎？\n\n隊伍名稱：${record.teamName}\n日期：${record.date}\n時間：${record.time}`
-    );
-
-    if (!isConfirmed)
-      return;
-
-    let response;
-    if (record.recordType === 'court') {
-      response = await fetch("/api/courts", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: record.originalDate,
-          timeSlot: record.time,
-          cancelledTeamId: record.teamId,
-        }),
-      });
-    } else if (record.recordType === 'reservation') {
-      const reservationId = record.id;
-      response = await fetch("/api/reservations", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          reservationId: reservationId,
-        }),
-      });
-    }
-
-    if (response.ok) {
-      await fetchUserRecords();
-      alert("取消成功");
-    } else {
-      const errorData = await response.json();
-      alert(`取消失敗: ${errorData.message}`);
-    }
-  } catch (err) {
-    console.error("Error cancelling registration:", err);
-    alert("取消時發生錯誤");
-  }
-};
-
-  const actionTemplate = (rowData) => {    
+  const actionTemplate = (rowData) => {
     let label = '';
-    if (rowData.recordType === 'court')
-      label = '取消登記';
-    else if (rowData.status === '志願一')
-      label = '取消預約';
+    if (rowData.recordType === 'court') label = '取消登記';
+    else if (rowData.status === '志願一') label = '取消預約';
     else
-      return '';
+      return (
+        <div style={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+          {/* empty place holder to stretch height */}
+        </div>
+      );
 
     return (
-      <Button
+      <div style={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+        <Button
           label={label}
-          className="p-button-danger"
+          className=" p-button-danger"
           onClick={() => handleCancelRegistration(rowData)}
           disabled={rowData.isExpired}
-      />
+          style={{ width: "100%", borderRadius: "6px" }}
+        />
+      </div>
     );
-};
+  };
+
+  // const removeSorting = () => {
+  //   return (
+  //     <div style={{ display: "flex", justifyContent: "flex-end" }}>
+  //       <Button
+  //         label="清除排序"
+  //         icon="pi pi-times"
+  //         onClick={() => setLazyState((prev) => ({ ...prev, multiSortMeta: [] }))}
+  //         disabled={lazyState.multiSortMeta.length === 0}
+  //       />
+  //     </div>
+  //   );
+  // };
 
   return (
     <div>
@@ -341,21 +405,24 @@ export default function RecordPage() {
       <div className="records-table-container">
         <h1 className="title">查詢紀錄</h1>
         <DataTable
+          // header={removeSorting}
           value={displayedRecords}
           className="records-table"
           stripedRows
           lazy
           paginator
-          removableSort
-          filterDisplay="row"
+          // removableSort
+          // filterDisplay="row"
           rows={lazyState.rows}
+          rowGroupMode="rowspan"
+          groupRowsBy={['teamName', 'date']}
           first={lazyState.first}
           totalRecords={totalFilteredRecords}
           onPage={onPage}
           onSort={onSort}
           onFilter={onFilter}
-          sortField={lazyState.sortField}
-          sortOrder={lazyState.sortOrder}
+          sortMode="multiple"
+          multiSortMeta={lazyState.multiSortMeta}
           filters={lazyState.filters}
           loading={loading}
           emptyMessage="沒有相關紀錄"
@@ -385,8 +452,8 @@ export default function RecordPage() {
           <Column
             field="status"
             header="狀態"
-            filter
-            filterPlaceholder="搜尋"
+            // filter
+            // filterPlaceholder="搜尋"
             alignHeader="center"
             style={{ textAlign: "center", width: "5rem" }}
             sortable
@@ -402,7 +469,7 @@ export default function RecordPage() {
             body={actionTemplate}
             header="操作"
             alignHeader="center"
-            style={{ textAlign: "center", width: "10rem" }}
+            style={{ textAlign: "center", width: "5rem" }}
           ></Column>
         </DataTable>
       </div>
