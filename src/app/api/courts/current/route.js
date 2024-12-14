@@ -10,7 +10,7 @@ export async function GET(req) {
         const currentHour = currentTime.getHours();
 
         // 設定查詢時間範圍
-        if (currentHour > 23 || currentHour < 8) {
+        if (currentHour > 22 || currentHour < 8) {
             return new Response(
                 JSON.stringify({ message: "非球場開放時間" }),
                 { status: 202 }

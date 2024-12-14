@@ -1,12 +1,19 @@
 import dotenv from "dotenv";
+dotenv.config();
+
 import dbConnect from "../utils/db.js";
 import Court from "../models/Court.js";
 import promptSync from "prompt-sync";
 import { Reservation } from "../models/Reservation.js";
+import Teams from "../models/Teams.js";
+import User from "../models/User.js";
+import nodemailer from "nodemailer";
 import next from "next";
 
-dotenv.config();
 const prompt = promptSync({ sigint: true });
+
+const EMAIL_USER = "courtreserver@gmail.com";
+const EMAIL_PASS = "gmdvejdnarqvugxh";
 
 async function drawAndAddToCourts()
 {
@@ -107,6 +114,44 @@ async function drawAndAddToCourts()
         remaining_teams = shuffled;
     });
 
+    async function sendEmail(to, subject, text) {
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: EMAIL_USER,
+                pass: EMAIL_PASS,
+            },
+        });
+
+        console.log("EMAIL_USER:", EMAIL_USER);
+        console.log("EMAIL_PASS:", EMAIL_PASS);
+
+        await transporter.sendMail({ from: EMAIL_USER, to, subject, text });
+    }
+
+    async function notifyTeams(reservation_dict) {
+        for (const date in reservation_dict) {
+            const timeSlots = reservation_dict[date];
+            for (const time in timeSlots) {
+                const teams = timeSlots[time];
+                for (const teamId of teams) {
+                    const team = await Teams.findOne({ id: teamId });
+                    if (!team || !team.uname1) continue;
+
+                    const user = await User.findOne({ username: team.uname1 });
+                    if (!user || !user.email) continue;
+
+                    console.log(`Sending email to: ${user.email}`);
+                    await sendEmail(
+                        user.email,
+                        "Reservation Confirmation",
+                        `Your team ${team.teamname} has been reserved for ${date} at ${time}.`
+                    );
+                }
+            }
+        }
+    }
+
     function printData(data) {
         for (const date in data) {
           console.log(`Date: ${date}`);
@@ -125,6 +170,10 @@ async function drawAndAddToCourts()
     
     console.log("=============Result==============")
     printData(reservation_dict);
+
+    console.log("Sending notifications...");
+    await notifyTeams(reservation_dict);
+
     console.log("=============New Entries============")
 
     // start drawing

@@ -12,9 +12,9 @@
   "dependencies": {
     "@cfworker/web": "^4.0.1",
     "bcryptjs": "^2.4.3",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.3",
+    "mongoose": "^8.9.0",
     "next": "^15.0.3",
     "nodemailer": "^6.9.16",
     "primeflex": "^3.3.1",
