@@ -23,13 +23,19 @@ async function dbConnect() {
   }
 
   if (!cached.promise) {
+    console.log("Connecting to MongoDB URI:", MONGODB_URI); // Debugging log
     cached.promise = mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 5000, // Adjust timeout for connection selection
       socketTimeoutMS: 10000, // Adjust socket timeout
     }).then((mongoose) => {
+      console.log("Connected to MongoDB");
       return mongoose;
+    }).catch((err) => {
+      console.error("MongoDB connection error:", err);
+      throw err;
     });
   }
+  
   cached.conn = await cached.promise;
   return cached.conn;
 }
